@@ -1,0 +1,19 @@
+node modules: instalado automaticamente com react, vite e libraries. tira as mãos daí márcia
+
+public: páginas públicas que o react não muda, como index e imagens estáticas
+
+src: arquivos de código do react
+
+.gitignore: arquivos que tão de mal com o Git e ele tá ignorando (HAHAHAHAHAHAH QUE BELA PEÇA DE GENTE), ou seja, não salva no histórico - como o node modules
+
+eslint.config.js: regras de estilo e boas práticas de código (hã?) (ah, ele é tipo o prettier)
+
+INDEX: página principal e saco de porrada do react
+
+package.json: dependências e scripts a serem executados
+
+package-lock.json: segurança que garante que todo mundo tá usando as mesmas versões de pacotes (por exemplo, v 4.0.3)
+
+README: adivinha seu bobão
+
+vite.config.js: configurações do Vite (vai aprender inglês man)

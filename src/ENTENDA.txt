@@ -1,0 +1,7 @@
+pages: olha man a gente já concordou que cê precisa aprender inglês mas o negócio aqui agora ficou tenso como que tu nn sabe o que é pages pelo amor de Deus
+
+componentes: não são exatamente páginas, mas aparecem nas páginas (como barra de pesquisa e tals)
+
+services: funções que chamam o backend - ou melhor, as API's
+
+App.jsx: barzinho que todo mundo se encontra
