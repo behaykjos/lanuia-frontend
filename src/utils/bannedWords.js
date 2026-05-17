@@ -28,6 +28,7 @@ export const bannedWords = [
   'mutilation',
   'nigga',
   'nigger',
+  'penis',
   'piss',
   'pussy',
   'rape',

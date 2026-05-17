@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import heroImage from '../assets/intro.jpg';
+import heroImage from '../assets/intro.JPG';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');

@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 import { bannedWords } from '../utils/bannedWords'
 import { useNavigate } from "react-router-dom";
-import Modal from '../components/Modal'; // caminho correto pro seu Modal
-import Login from './Login'; // ou o caminho certo pro seu Login
 
 const Register = () => {
 
@@ -72,8 +70,8 @@ const Register = () => {
       }
 
 
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
+      localStorage.setItem('@Lanuia:token', data.token)
+      localStorage.setItem('@Lanuia:user', JSON.stringify(data.user))
 
       window.location.href = "/feed"
       // ou se estiver usando react-router:

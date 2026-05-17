@@ -31,9 +31,8 @@ const Login = () => {
       }
 
       // Salvar dados no localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem('@Lanuia:token', data.token);
+      localStorage.setItem('@Lanuia:user', JSON.stringify(data.user));
 
       // Redireciona para o Feed
       navigate("/feed");

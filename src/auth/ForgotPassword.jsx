@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import heroImage from '../assets/intro.jpg';
+import heroImage from '../assets/intro.JPG';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -39,6 +39,7 @@ const ForgotPassword = () => {
         <div style={{ padding: '40px', maxWidth: '400px' }}>
           <h1 className="lanuia">Reset Password</h1>
           <p>Enter your email address and we'll send you a link to reset your password.</p>
+          <br></br>
           
           <form onSubmit={handleSubmit}>
             <label>Email Address</label>

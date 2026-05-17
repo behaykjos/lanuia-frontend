@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import Login from '../auth/Login';
 import Register from '../auth/Register';
-import heroImage from '../assets/intro.jpg' // sua imagem
+import heroImage from '../assets/intro.JPG' // sua imagem
 
 const Landing = () => {
   const [view, setView] = useState('welcome');
@@ -27,9 +27,8 @@ const Landing = () => {
       }
 
       // save token and user info so other parts of the app can use them
-      localStorage.setItem('token', data.token);
       localStorage.setItem('@Lanuia:token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('@Lanuia:user', JSON.stringify(data.user));
       // use react-router navigate instead of a full page reload
       navigate('/feed');
     } catch (err) {
@@ -45,7 +44,9 @@ const Landing = () => {
         {view === 'welcome' && (
           <>
             <h1 className="lanuia">Where stories flow and minds glow.</h1>
+            <br></br>
             <p>Find your people and dive into new literary worlds together. Explore our reviews, spil your theories and create a new <i>fandomverse</i>.</p>
+            <br></br><br></br>
 
             {/* GOOGLE PRIMEIRO */}
             <GoogleLogin
@@ -62,6 +63,7 @@ const Landing = () => {
               Login
             </button>
 
+            <br></br>
             <p className="muted">
               Don’t have an account?{' '}
               <span className='btn-secondary' onClick={() => setView('register')}>Register</span>
@@ -74,6 +76,7 @@ const Landing = () => {
         {view === 'login' && (
           <>
             <Login />
+            <br></br>
             <p className="switch-text">
               Don't have an account?{' '}
               <span className='btn-secondary' onClick={() => setView('register')}>
@@ -86,6 +89,7 @@ const Landing = () => {
         {view === 'register' && (
           <>
             <Register />
+            <br></br>
             <p className="switch-text">
               Already have an account?{' '}
               <span className='btn-secondary' onClick={() => setView('login')}>
