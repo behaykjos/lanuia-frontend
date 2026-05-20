@@ -112,14 +112,15 @@ const Feed = () => {
                   </div>
                   <span className="post-more">···</span>
                 </div>
-                <p className="post-content">Apollo &gt;&gt;&gt;&gt; todos os outros personagens, não me venham dizer o contrário.</p>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <p className="post-content" style={{ filter: 'blur(8px)', margin: 0, display: 'inline-block' }}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                  <button className="post-show-btn" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2}}>Mostrar publicação</button>
+                </div>
                 <div className="post-tags">
-                  <span className="post-tag">#pjo</span>
-                  <span className="post-tag">#apollo</span>
                 </div>
                 <div className="post-actions">
                   <span className="post-type-badge"><FontAwesomeIcon icon={faWandMagicSparkles} />  Teoria</span>
-                  <button className="post-show-btn">Mostrar publicação</button>
+                  <span className="post-show">Contém spoiler</span>
                   <div className="post-action-group">
                     <span><FontAwesomeIcon icon={faHeart} /> 44</span>
                     <span><FontAwesomeIcon icon={faComment} /> 12</span>
@@ -137,7 +138,7 @@ const Feed = () => {
                   <div className="avatar">H</div>
                   <div className="post-info">
                     <p className="post-name">He/She/It <span className="post-nick">@heshit_reads</span></p>
-                    <p className="review-book-title">Vermelho, Branco e Sangue Azul ★★★☆☆</p>
+                    <p className="review-book-title">Vermelho, Branco e Sangue Azul <FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /></p>
                   </div>
                   <span className="post-more">···</span>
                 </div>
@@ -148,7 +149,7 @@ const Feed = () => {
                   <span className="post-tag">#boyslove</span>
                 </div>
                 <div className="post-actions">
-                  <button className="post-show-btn">Mostrar review</button>
+                  <span className="post-show">Contém spoiler</span>
                   <div className="post-action-group">
                     <span><FontAwesomeIcon icon={faHeart} /> 140</span>
                     <span><FontAwesomeIcon icon={faComment} /> 99</span>
@@ -173,7 +174,7 @@ const Feed = () => {
                   <span className="post-tag">#jude</span>
                 </div>
                 <div className="post-actions">
-                  <button className="post-show-btn">Mostrar review</button>
+                  <span className="post-show">Contém spoiler</span>
                   <div className="post-action-group">
                     <span><FontAwesomeIcon icon={faHeart} /> 280</span>
                     <span><FontAwesomeIcon icon={faComment} /> 45</span>
