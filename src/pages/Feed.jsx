@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faComment, faShareFromSquare, faStar, faPaperPlane, faFrog, faWater } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faComment, faShareFromSquare, faStar, faPaperPlane, faFrog, faWater, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
 const Feed = () => {
@@ -62,12 +62,12 @@ const Feed = () => {
 
           {activatedMessage && (
             <div className="success-box" style={{ marginTop: 20 }}>
-              ✓ Conta ativada! Bem-vinda à Lanuia.
+              <FontAwesomeIcon icon={faCheck} /> Conta ativada! Bem-vinda à Lanuia.
             </div>
           )}
           {!user.isActive && (
             <div className="warning-banner" style={{ borderRadius: 12, marginTop: 20 }}>
-              <span>⚠️ Confirma o teu email para ativares a conta.</span>
+              <span><FontAwesomeIcon icon={faBell} /> Confirma o teu email para ativares a conta.</span>
             </div>
           )}
 
@@ -86,8 +86,7 @@ const Feed = () => {
                 <div className="post-header">
                   <div className="avatar">S</div>
                   <div className="post-info">
-                    <p className="post-name">Simme ☕ <span className="post-nick">@simme_reads</span></p>
-                    <span className="post-type-badge">Teoria</span>
+                    <p className="post-name">Simme ☕</p>
                   </div>
                   <span className="post-more">···</span>
                 </div>
@@ -97,10 +96,11 @@ const Feed = () => {
                   <span className="post-tag">#romantasy</span>
                 </div>
                 <div className="post-actions">
-                  <span><FontAwesomeIcon icon={faHeart} /> 350</span>
-                  <span><FontAwesomeIcon icon={faComment} /> 66</span>
-                  <span><FontAwesomeIcon icon={faPaperPlane} /></span>
-                  <button className="post-show-btn">Mostrar publicação</button>
+                  <div className="post-action-group">
+                    <span><FontAwesomeIcon icon={faHeart} /> 350</span>
+                    <span><FontAwesomeIcon icon={faComment} /> 66</span>
+                    <span><FontAwesomeIcon icon={faPaperPlane} /></span>
+                  </div>
                 </div>
               </div>
 
@@ -108,8 +108,7 @@ const Feed = () => {
                 <div className="post-header">
                   <div className="avatar">L</div>
                   <div className="post-info">
-                    <p className="post-name">Lauren ama Rhea <span className="post-nick">@laurenrhea</span></p>
-                    <span className="post-type-badge">Teoria</span>
+                    <p className="post-name">Lauren ama Rhea</p>
                   </div>
                   <span className="post-more">···</span>
                 </div>
@@ -119,10 +118,13 @@ const Feed = () => {
                   <span className="post-tag">#apollo</span>
                 </div>
                 <div className="post-actions">
-                  <span><FontAwesomeIcon icon={faHeart} /> 44</span>
-                  <span><FontAwesomeIcon icon={faComment} /> 12</span>
-                  <span><FontAwesomeIcon icon={faPaperPlane} /></span>
+                  <span className="post-type-badge"><FontAwesomeIcon icon={faWandMagicSparkles} />  Teoria</span>
                   <button className="post-show-btn">Mostrar publicação</button>
+                  <div className="post-action-group">
+                    <span><FontAwesomeIcon icon={faHeart} /> 44</span>
+                    <span><FontAwesomeIcon icon={faComment} /> 12</span>
+                    <span><FontAwesomeIcon icon={faPaperPlane} /></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -146,10 +148,12 @@ const Feed = () => {
                   <span className="post-tag">#boyslove</span>
                 </div>
                 <div className="post-actions">
-                  <span><FontAwesomeIcon icon={faHeart} /> 140</span>
-                  <span><FontAwesomeIcon icon={faComment} /> 99</span>
-                  <span><FontAwesomeIcon icon={faPaperPlane} /></span>
                   <button className="post-show-btn">Mostrar review</button>
+                  <div className="post-action-group">
+                    <span><FontAwesomeIcon icon={faHeart} /> 140</span>
+                    <span><FontAwesomeIcon icon={faComment} /> 99</span>
+                    <span><FontAwesomeIcon icon={faPaperPlane} /></span>
+                  </div>
                 </div>
               </div>
 
@@ -169,10 +173,12 @@ const Feed = () => {
                   <span className="post-tag">#jude</span>
                 </div>
                 <div className="post-actions">
-                  <span><FontAwesomeIcon icon={faHeart} /> 280</span>
-                  <span><FontAwesomeIcon icon={faComment} /> 45</span>
-                  <span><FontAwesomeIcon icon={faPaperPlane} /></span>
                   <button className="post-show-btn">Mostrar review</button>
+                  <div className="post-action-group">
+                    <span><FontAwesomeIcon icon={faHeart} /> 280</span>
+                    <span><FontAwesomeIcon icon={faComment} /> 45</span>
+                    <span><FontAwesomeIcon icon={faPaperPlane} /></span>
+                  </div>
                 </div>
               </div>
             </div>
