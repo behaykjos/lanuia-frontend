@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Root from './pages/Root';
 import Landing from './pages/Landing';
@@ -12,10 +12,28 @@ import ActivateAccount from './pages/ActivateAccount';
 import Confirm from './pages/Confirm';
 import ProtectedRoute from './components/ProtectedRoute';
 
+function BodyClassManager() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const appRoutes = ['/feed', '/livros', '/estante', '/mensagens', '/perfil'];
+    const isAppRoute = appRoutes.some(route => location.pathname.startsWith(route));
+
+    if (isAppRoute) {
+      document.body.classList.add('app-layout');
+    } else {
+      document.body.classList.remove('app-layout');
+    }
+  }, [location]);
+
+  return null;
+}
+
 function App() {
   return (
     <ThemeProvider>
     <BrowserRouter>
+      <BodyClassManager />
       <Routes>
         <Route path="/" element={<Root />} />
         <Route path="/landing" element={<Landing />} />
