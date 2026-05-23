@@ -138,7 +138,14 @@ const Feed = () => {
                   <div className="avatar">H</div>
                   <div className="post-info">
                     <p className="post-name">He/She/It <span className="post-nick">@heshit_reads</span></p>
-                    <p className="review-book-title">Vermelho, Branco e Sangue Azul <FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /></p>
+                    <p className="review-book-title">Vermelho, Branco e Sangue Azul</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
                   </div>
                   <span className="post-more">···</span>
                 </div>
@@ -163,7 +170,14 @@ const Feed = () => {
                   <div className="avatar">Q</div>
                   <div className="post-info">
                     <p className="post-name">Que final perfeito <span className="post-nick">@bookworm22</span></p>
-                    <p className="review-book-title">Rainha do Nada <FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /><FontAwesomeIcon icon={faStar} /></p>
+                    <p className="review-book-title">Rainha do Nada</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
+                    <FontAwesomeIcon icon={faStar} />
                   </div>
                   <span className="post-more">···</span>
                 </div>
