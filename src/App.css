@@ -541,7 +541,7 @@ button:disabled {
 
 /* REVIEW ESPECÍFICO */
 .review-book-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #555;
 }
@@ -664,7 +664,7 @@ button:disabled {
 }
 
 .suggestion-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: #2F2F2F;
 }
