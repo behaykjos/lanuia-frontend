@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faComment, faShareFromSquare, faStar, faPaperPlane, faFrog, faWater, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faComment, faShareFromSquare, faStar, faPaperPlane, faFrog, faWater, faWandMagicSparkles, faCirclePlus } from '@fortawesome/free-solid-svg-icons';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
 const Feed = () => {
@@ -86,7 +86,7 @@ const Feed = () => {
                 <div className="post-header">
                   <div className="avatar">S</div>
                   <div className="post-info">
-                    <p className="post-name">Simme ☕</p>
+                    <p className="post-name">Simme ☕︎</p>
                   </div>
                   <span className="post-more">···</span>
                 </div>
@@ -137,7 +137,7 @@ const Feed = () => {
                 <div className="post-header">
                   <div className="avatar">H</div>
                   <div className="post-info">
-                    <p className="post-name">He/She/It <span className="post-nick">@heshit_reads</span></p>
+                    <p className="review-name">Esperava Mais</p>
                     <p className="review-book-title">Vermelho, Branco e Sangue Azul</p>
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
@@ -149,14 +149,10 @@ const Feed = () => {
                   </div>
                   <span className="post-more">···</span>
                 </div>
-                <span className="recommend-badge no">✗ Não recomendo</span>
                 <p className="post-content">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                <div className="post-tags">
-                  <span className="post-tag">#rwrb</span>
-                  <span className="post-tag">#boyslove</span>
-                </div>
+                <span className="recommend-badge no">✗ Não recomendo</span>
                 <div className="post-actions">
-                  <span className="post-show">Contém spoiler</span>
+                  <span className="post-name">He/She/It</span>
                   <div className="post-action-group">
                     <span><FontAwesomeIcon icon={faHeart} /> 140</span>
                     <span><FontAwesomeIcon icon={faComment} /> 99</span>
@@ -169,7 +165,7 @@ const Feed = () => {
                 <div className="post-header">
                   <div className="avatar">Q</div>
                   <div className="post-info">
-                    <p className="post-name">Que final perfeito <span className="post-nick">@bookworm22</span></p>
+                    <p className="review-name">Que final perfeito</p>
                     <p className="review-book-title">Rainha do Nada</p>
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
@@ -181,13 +177,13 @@ const Feed = () => {
                   </div>
                   <span className="post-more">···</span>
                 </div>
-                <span className="recommend-badge yes">✓ Recomendo</span>
-                <p className="post-content">Uma conclusão digna para uma série incrível. Holly Black conseguiu superar todas as expectativas.</p>
-                <div className="post-tags">
-                  <span className="post-tag">#folkoftheair</span>
-                  <span className="post-tag">#jude</span>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <p className="post-content" style={{ filter: 'blur(8px)', margin: 0, display: 'inline-block' }}>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                  <button className="post-show-btn" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2}}>Mostrar publicação</button>
                 </div>
+                <span className="recommend-badge yes" style={{ marginTop: '17px' }}>✓ Recomendo</span>
                 <div className="post-actions">
+                  <span className="post-name">Nakyum</span>
                   <span className="post-show">Contém spoiler</span>
                   <div className="post-action-group">
                     <span><FontAwesomeIcon icon={faHeart} /> 280</span>
@@ -205,7 +201,7 @@ const Feed = () => {
       <aside className="right-column">
         <div className="search-container">
           <FontAwesomeIcon icon={faMagnifyingGlass} />
-          <input placeholder="Pesquisar posts, utilizadores, #tags" />
+          <input placeholder="Searching for something?" />
         </div>
 
         <div className="tags-box">
@@ -218,14 +214,14 @@ const Feed = () => {
         </div>
 
         <div className="suggestions-box">
-          <h3><FontAwesomeIcon icon={faFrog} />Sugestões para ti</h3>
+          <h3><FontAwesomeIcon icon={faFrog} /> Sugestões para ti</h3>
           <div className="suggestion-card">
             <div className="avatar" style={{ width: 38, height: 38, fontSize: 15 }}>A</div>
             <div className="suggestion-info">
               <span className="suggestion-name">Apollo &gt;&gt;&gt;&gt;</span>
               <span className="suggestion-nick">@apollofan</span>
             </div>
-            <button className="follow-btn">Seguir</button>
+            <button className="follow-btn"><FontAwesomeIcon icon={faCirclePlus} /></button>
           </div>
           <div className="suggestion-card">
             <div className="avatar" style={{ width: 38, height: 38, fontSize: 15 }}>B</div>
@@ -233,7 +229,7 @@ const Feed = () => {
               <span className="suggestion-name">BookishSoul</span>
               <span className="suggestion-nick">@bookishsoul</span>
             </div>
-            <button className="follow-btn">Seguir</button>
+            <button className="follow-btn"><FontAwesomeIcon icon={faCirclePlus} /></button>
           </div>
         </div>
       </aside>
