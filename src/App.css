@@ -291,7 +291,7 @@ button:disabled {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Inter', sans-serif; /* Ou a fonte que preferir */
+  font-family: 'Atkinson Hyperlegible', sans-serif;
 }
 
 .layout {
@@ -480,6 +480,7 @@ button:disabled {
   line-height: 1.6;
   color: #333;
   margin-bottom: 12px;
+  display: inline-block;
 }
 
 .post-tags {
@@ -487,10 +488,11 @@ button:disabled {
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 14px;
+  margin-top: 0;
 }
 
 .post-tag {
-  font-size: 13px;
+  font-size: 15px;
   color: #9d6b7a;
   font-weight: 700;
   cursor: pointer;
@@ -539,10 +541,15 @@ button:disabled {
   font-weight: 500;
 }
 
+.review-name {
+  font-weight: 700;
+  font-size: 20px;
+  color: #2F2F2F;
+}
+
 /* REVIEW ESPECÍFICO */
 .review-book-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 17px;
   color: #555;
 }
 
@@ -551,6 +558,8 @@ button:disabled {
 }
 
 .recommend-badge {
+  display: inline-block;
+  margin-bottom: 12px;
   font-size: 12px;
   font-weight: 600;
   padding: 3px 12px;
@@ -583,8 +592,8 @@ button:disabled {
   padding: 10px 15px;
   display: flex;
   align-items: center;
-  margin-bottom: 28px;
-  margin-top: 24px;
+  margin-bottom: 24px;
+  margin-top: 20px;
 }
 
 .search-container input {
@@ -607,22 +616,27 @@ button:disabled {
 }
 
 .tags-box h3 {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 16px;
   color: #2F2F2F;
 }
 
 .tag-card {
-  border: 1px solid #f0eaed;
+  border: 2px solid #eab7ca;
   border-radius: 14px;
   padding: 12px 16px;
   margin-bottom: 8px;
   cursor: pointer;
   transition: background 0.15s;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tag-card p {
+  font-size: 16px;
 }
 
 .tag-card:hover {
@@ -643,18 +657,20 @@ button:disabled {
 
 /* SUGESTÕES */
 .suggestions-box h3 {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 700;
   margin-bottom: 16px;
   color: #2F2F2F;
 }
 
 .suggestion-card {
+  border: 2px solid #eab7ca;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f5f0f2;
+  padding: 12px 16px;
+  margin-bottom: 8px;
 }
 
 .suggestion-info {
@@ -676,15 +692,13 @@ button:disabled {
 
 .follow-btn {
   background: none;
-  border: 1px solid #E8AFC2;
-  color: #9d6b7a;
-  font-size: 13px;
+  color: #d990a6;
+  font-size: 30px;
   font-weight: 600;
-  padding: 4px 14px;
-  border-radius: 20px;
   cursor: pointer;
   transition: all 0.15s;
-  white-space: nowrap;
+  margin: 0;
+  padding: 0;
 }
 
 .follow-btn:hover {
