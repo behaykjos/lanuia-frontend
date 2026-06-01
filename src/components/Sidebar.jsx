@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Home, BookOpen, Library, MessageCircle, PlusCircle, MoreHorizontal, Palette } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Home, BookOpen, Library, MessageCircle, PlusCircle, Palette } from "lucide-react";
+import { NavLink } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
 const Sidebar = () => {
   const [user, setUser] = useState(null);
-  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -32,16 +31,16 @@ const Sidebar = () => {
       <nav className="menu-section">
         {menuItems.map((item, index) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
 
           return (
-            <div
+            <NavLink
               key={index}
-              className={`menu-item ${isActive ? "active" : ""}`}
+              to={item.path}
+              className={({ isActive }) => `menu-item ${isActive ? "active" : ""}`}
             >
               <Icon size={22} />
               <span>{item.label}</span>
-            </div>
+            </NavLink>
           );
         })}
       </nav>
