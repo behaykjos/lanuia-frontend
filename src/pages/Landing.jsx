@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import Login from '../auth/Login';
 import Register from '../auth/Register';
-import heroImage from '../assets/intro.JPG' // sua imagem
+import ForgotPassword from '../auth/ForgotPassword';
+import ResetPassword from '../auth/ResetPassword';
+import heroImage from '../assets/intro.JPG' 
 
 const Landing = () => {
   const [view, setView] = useState('welcome');
@@ -48,7 +50,6 @@ const Landing = () => {
             <p>Find your people and dive into new literary worlds together. Explore our reviews, spil your theories and create a new <i>fandomverse</i>.</p>
             <br></br><br></br>
 
-            {/* GOOGLE PRIMEIRO */}
             <GoogleLogin
               onSuccess={handleGoogleLogin}
               onError={() => setError('Google login failed')}
@@ -76,6 +77,11 @@ const Landing = () => {
         {view === 'login' && (
           <>
             <Login />
+            <p style={{ marginTop: '20px', textAlign: 'center' }}>
+              <span className="btn-secondary" onClick={() => setView('forgot-password')}>
+                Forgot password?
+              </span>
+            </p>
             <br></br>
             <p className="switch-text">
               Don't have an account?{' '}
@@ -96,6 +102,25 @@ const Landing = () => {
                 Login
               </span>
             </p>
+          </>
+        )}
+
+        {view === 'forgot-password' && (
+          <>
+            <ForgotPassword />
+            <br></br>
+            <p className="switch-text">
+              {' '}
+              <span className='btn-secondary' onClick={() => setView('login')}>
+                Back to Login
+              </span>
+            </p>
+          </>
+        )}
+
+        {view === 'reset-password' && (
+          <>
+            <ResetPassword />
           </>
         )}
       </div>

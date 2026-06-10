@@ -13,13 +13,16 @@ const Books = () => {
           {/* Banner autor em destaque (ocupa toda a largura do feed) */}
           <div className="author-banner">
             <div className="author-banner-info">
-              <span className="author-banner-label">Autora</span>
+              <span className="author-banner-label">Autores Sugeridos</span>
               <h2 className="author-banner-name">Colleen Hoover</h2>
               <p className="author-banner-bio">Nascida Margaret Colleen Fennell, é uma escritora norte-americana que aborda temas frágeis em seus livros de romance new-adult.</p>
               <div className="author-banner-actions">
                 <button className="btn-explore">Explorar</button>
-                <button className="btn-follow-author">Não recomendado</button>
+                <button className="btn-more-info">Mais informações</button>
               </div>
+            </div>
+            <div className="author-banner-image">
+              <img src="https://cloudfront-us-east-1.images.arcpublishing.com/estadao/WGRIX7CIP5FSFPL5QN7S6AOLGA.jpg" alt="Colleen Hoover" />
             </div>
           </div>
 
@@ -77,26 +80,26 @@ const Books = () => {
         <div className="suggestions-box">
           <h3><FontAwesomeIcon icon={faPenNib} /> Autores para ti</h3>
           <div className="suggestion-card">
-            <div className="avatar" style={{ width: 38, height: 38, fontSize: 13, background: '#c8a4b8' }}>SJM</div>
+            <div className="profile-avatar" style={{ width: 38, height: 38, fontSize: 13, background: '#c8a4b8' }}>SJM</div>
             <div className="suggestion-info">
               <span className="suggestion-name">Sarah J. Maas</span>
-              <span className="suggestion-nick">@sjmaas</span>
+              <span className="suggestion-total">17 livros publicados</span>
             </div>
             <button className="follow-btn"><FontAwesomeIcon icon={faCirclePlus} /></button>
           </div>
           <div className="suggestion-card">
-            <div className="avatar" style={{ width: 38, height: 38, fontSize: 13, background: '#b8869e' }}>LR</div>
+            <div className="profile-avatar" style={{ width: 38, height: 38, fontSize: 13, background: '#b8869e' }}>LR</div>
             <div className="suggestion-info">
               <span className="suggestion-name">Lauren Roberts</span>
-              <span className="suggestion-nick">@laurenroberts</span>
+              <span className="suggestion-total">12 livros publicados</span>
             </div>
             <button className="follow-btn"><FontAwesomeIcon icon={faCirclePlus} /></button>
           </div>
           <div className="suggestion-card">
-            <div className="avatar" style={{ width: 38, height: 38, fontSize: 13, background: '#d4a0b5' }}>HB</div>
+            <div className="profile-avatar" style={{ width: 38, height: 38, fontSize: 13, background: '#d4a0b5' }}>HB</div>
             <div className="suggestion-info">
               <span className="suggestion-name">Holly Black</span>
-              <span className="suggestion-nick">@hollyblack</span>
+              <span className="suggestion-total">8 livros publicados</span>
             </div>
             <button className="follow-btn"><FontAwesomeIcon icon={faCirclePlus} /></button>
           </div>

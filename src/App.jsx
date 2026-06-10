@@ -10,15 +10,21 @@ import ForgotPassword from './auth/ForgotPassword';
 import ResetPassword from './auth/ResetPassword';
 import ActivateAccount from './pages/ActivateAccount';
 import Books from './pages/Books';
+import Shelf from './pages/Shelf';
+import Messages from './pages/DirectMessages';
 import Profile from './pages/Profile';
 import Confirm from './pages/Confirm';
 import ProtectedRoute from './components/ProtectedRoute';
+import CreatePost from './pages/CreatePost';
+import CreateReview from './pages/CreateReview';
+import AuthorPage from './pages/AuthorPage';
+import BookPage from './pages/BookPage';
 
 function BodyClassManager() {
   const location = useLocation();
 
   useEffect(() => {
-    const appRoutes = ['/feed', '/books', '/perfil'];
+    const appRoutes = ['/feed', '/books', '/shelf', '/messages', '/profile', '/createpost', '/createreview', '/authorpage', '/bookpage'];
     const isAppRoute = appRoutes.some(route => location.pathname.startsWith(route));
 
     if (isAppRoute) {
@@ -67,7 +73,55 @@ function App() {
             } 
           />
           <Route 
-            path="/perfil" 
+            path="/authorpage" 
+            element={
+              <ProtectedRoute>
+                <AuthorPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/bookpage" 
+            element={
+              <ProtectedRoute>
+                <BookPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/shelf" 
+            element={
+              <ProtectedRoute>
+                <Shelf />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/messages" 
+            element={
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/createpost" 
+            element={
+              <ProtectedRoute>
+                <CreatePost />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/createreview" 
+            element={
+              <ProtectedRoute>
+                <CreateReview />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/profile" 
             element={
               <ProtectedRoute>
                 <Profile />

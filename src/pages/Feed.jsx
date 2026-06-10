@@ -84,7 +84,7 @@ const Feed = () => {
             <div className="posts-list">
               <div className="post-card">
                 <div className="post-header">
-                  <div className="avatar">S</div>
+                  <div className="profile-avatar">S</div>
                   <div className="post-info">
                     <p className="post-name">Simme ☕︎</p>
                   </div>
@@ -106,7 +106,7 @@ const Feed = () => {
 
               <div className="post-card">
                 <div className="post-header">
-                  <div className="avatar">L</div>
+                  <div className="profile-avatar">L</div>
                   <div className="post-info">
                     <p className="post-name">Lauren ama Rhea</p>
                   </div>
@@ -135,7 +135,7 @@ const Feed = () => {
             <div className="posts-list">
               <div className="post-card">
                 <div className="post-header">
-                  <div className="avatar">H</div>
+                  <div className="profile-avatar">H</div>
                   <div className="post-info">
                     <p className="review-name">Esperava Mais</p>
                     <p className="review-book-title">Vermelho, Branco e Sangue Azul</p>
@@ -163,7 +163,7 @@ const Feed = () => {
 
               <div className="post-card">
                 <div className="post-header">
-                  <div className="avatar">Q</div>
+                  <div className="profile-avatar">Q</div>
                   <div className="post-info">
                     <p className="review-name">Que final perfeito</p>
                     <p className="review-book-title">Rainha do Nada</p>
@@ -216,7 +216,7 @@ const Feed = () => {
         <div className="suggestions-box">
           <h3><FontAwesomeIcon icon={faFrog} /> Sugestões para ti</h3>
           <div className="suggestion-card">
-            <div className="avatar" style={{ width: 38, height: 38, fontSize: 15 }}>A</div>
+            <div className="profile-avatar" style={{ width: 38, height: 38, fontSize: 15 }}>A</div>
             <div className="suggestion-info">
               <span className="suggestion-name">Apollo &gt;&gt;&gt;&gt;</span>
               <span className="suggestion-nick">@apollofan</span>
@@ -224,7 +224,7 @@ const Feed = () => {
             <button className="follow-btn"><FontAwesomeIcon icon={faCirclePlus} /></button>
           </div>
           <div className="suggestion-card">
-            <div className="avatar" style={{ width: 38, height: 38, fontSize: 15 }}>B</div>
+            <div className="profile-avatar" style={{ width: 38, height: 38, fontSize: 15 }}>B</div>
             <div className="suggestion-info">
               <span className="suggestion-name">BookishSoul</span>
               <span className="suggestion-nick">@bookishsoul</span>

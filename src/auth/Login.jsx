@@ -98,16 +98,6 @@ const Login = () => {
           Login
         </button>
       </form>
-
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
-        <span 
-          className="btn-secondary" 
-          onClick={() => navigate('/forgot-password')} 
-          style={{ cursor: 'pointer', textDecoration: 'underline' }}
-        >
-          Forgot password?
-        </span>
-      </p>
     </div>
   );
 };
