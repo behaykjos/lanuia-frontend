@@ -318,6 +318,7 @@ button:disabled {
 .landing {
   display: flex;
   min-height: 100vh;
+  align-items: stretch;
 }
 
 /* ESQUERDA */
@@ -328,8 +329,12 @@ button:disabled {
   flex-direction: column;
   justify-content: center;
   text-align: center;
-  margin-top: 0;
-  padding-top: 0;
+  align-items: center;
+}
+
+.landing-left > * {
+  width: 100%;
+  max-width: 500px;
 }
 
 /* DIREITA */
@@ -337,7 +342,6 @@ button:disabled {
   flex: 1;
   overflow: hidden; /* importante */
   background: white;
-  margin-top: 50px;
 }
 
 .landing-right img {
@@ -727,6 +731,13 @@ button:disabled {
 
 .search-container input::placeholder {
   color: var(--search-color);
+}
+
+.search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
 }
 
 /* TAGS BOX */
@@ -1130,19 +1141,24 @@ button.menu-item {
 
 .book-cover {
   flex-shrink: 0;
-  width: 143px;
-  height: 214px;
-  border-radius: 6px;
+  width: 138px;      /* Largura padrão de capa */
+  height: 220px;     /* Proporção 2:3 padrão */
+  border-radius: 8px;
+  overflow: hidden;  /* Garante que a imagem respeite o arredondamento */
   display: flex;
-  align-items: flex-end;
-  padding: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
-  line-height: 1.3;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background-color: #f0f0f0; /* Cor de fundo enquanto a imagem carrega */
+}
+
+.book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill; /* 'fill' ou 'cover' dependendo da sua preferência */
+  display: block;
 }
 
 @keyframes fadeInPage {
@@ -1158,8 +1174,8 @@ button.menu-item {
 }
 
 .book-cover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
 .book-cover.pink   { 
@@ -2659,8 +2675,6 @@ button.menu-item {
 }
 
 .book-cover-large {
-  width: 160px;
-  height: 240px;
   border-radius: 10px;
   display: flex;
   align-items: flex-end;

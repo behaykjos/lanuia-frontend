@@ -19,16 +19,11 @@ const Landing = () => {
         token: credentialResponse.credential,
       });
 
-      const data = await res.json();
+      const data = res.data;
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Google login failed');
-      }
-
-      // save token and user info so other parts of the app can use them
       localStorage.setItem('@Lanuia:token', data.token);
       localStorage.setItem('@Lanuia:user', JSON.stringify(data.user));
-      // use react-router navigate instead of a full page reload
+
       navigate('/feed');
     } catch (err) {
       setError('Google login failed');
@@ -42,7 +37,7 @@ const Landing = () => {
 
         {view === 'welcome' && (
           <>
-            <h1 className="lanuia">Where stories flow and minds glow.</h1>
+            <h1 className="lanuia">Where stories flow <br></br> and minds glow.</h1>
             <br></br>
             <p>Find your people and dive into new literary worlds together. Explore our reviews, spil your theories and create a new <i>fandomverse</i>.</p>
             <br></br><br></br>
