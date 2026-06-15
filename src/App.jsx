@@ -81,11 +81,9 @@ function App() {
             } 
           />
           <Route 
-            path="/bookpage" 
+            path="/bookpage/:id" 
             element={
-              <ProtectedRoute>
-                <BookPage />
-              </ProtectedRoute>
+              <BookPage />
             } 
           />
           <Route 

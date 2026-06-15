@@ -2912,3 +2912,47 @@ button.menu-item {
 .profile-bottom-col .profile-section-title {
   margin-bottom: 16px;
 }
+
+/* ===== DROPDOWN DE SUGESTÕES ===== */
+
+.search-suggestions-dropdown {
+  border: 1px solid #f0eaed;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+  scrollbar-width: none;
+}
+
+.search-suggestions-dropdown::-webkit-scrollbar {
+  display: none;
+}
+
+.suggestion-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid #f5f0f2;
+  color: #2F2F2F;
+  transition: background 0.15s;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: #fdeef3;
+}
+
+.suggestion-item strong {
+  font-weight: 600;
+}
+
+.suggestion-item span {
+  color: #aaa;
+  margin-left: 8px;
+  font-size: 13px;
+}

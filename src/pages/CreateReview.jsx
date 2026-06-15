@@ -1,11 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import { searchBooks } from '../services/googleBooks';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faImage, faXmark, faTriangleExclamation,
-  faPaperPlane, faEye, faEyeSlash, faStar,
-  faHeart, faComment, faMagnifyingGlass
-} from '@fortawesome/free-solid-svg-icons';
+import { faImage, faXmark, faTriangleExclamation, faPaperPlane, faEye, faEyeSlash, faStar, faHeart, faComment, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 
 const MAX_CHARS = 2000;
 
@@ -30,6 +27,8 @@ const StarRating = ({ value, onChange }) => (
 );
 
 const CreateReview = () => {
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedBookId, setSelectedBookId] = useState(null);
   const [reviewName, setReviewName] = useState('');
   const [bookQuery, setBookQuery] = useState('');
   const [stars, setStars] = useState(0);
@@ -40,9 +39,21 @@ const CreateReview = () => {
   const [preview, setPreview] = useState(false);
   const [spoilerRevealed, setSpoilerRevealed] = useState(false);
   const fileRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   const charsLeft = MAX_CHARS - content.length;
   const canPost = content.trim().length > 0 && bookQuery.trim().length > 0 && stars > 0;
+
+  // Fecha o dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setSuggestions([]);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleImage = (e) => {
     const file = e.target.files[0];
@@ -51,7 +62,13 @@ const CreateReview = () => {
     e.target.value = '';
   };
 
-  const storedUser = JSON.parse(localStorage.getItem('@Lanuia:user') || '{}');
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('@Lanuia:user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
 
   return (
     <div className="layout">
@@ -77,100 +94,127 @@ const CreateReview = () => {
               <div className="review-field">
                 <label className="field-label">Título da review</label>
                 <input
-                    className="review-input"
-                    placeholder="Ex: Melhor obra da minha VIDA"
-                    value={reviewName}
-                    onChange={e => setReviewName(e.target.value)}
+                  className="review-input"
+                  placeholder="Ex: Melhor obra da minha VIDA"
+                  value={reviewName}
+                  onChange={e => setReviewName(e.target.value)}
                 />
-                </div>
+              </div>
 
-                <div className="review-field">
-                  <label className="field-label">Livro</label>
-                  <div className="review-book-search-bar">
-                      <FontAwesomeIcon icon={faMagnifyingGlass} style={{ color: 'var(--search-color)', flexShrink: 0 }} />
-                      <input
-                      className="review-book-search-input"
-                      placeholder="Pesquisar livro..."
-                      value={bookQuery}
-                      onChange={e => setBookQuery(e.target.value)}
-                      />
+              <div className="review-field" style={{ position: 'relative' }} ref={dropdownRef}>
+                <label className="field-label">Livro</label>
+                <div className="review-book-search-bar">
+                  <FontAwesomeIcon icon={faMagnifyingGlass} style={{ color: 'var(--search-color)', flexShrink: 0 }} />
+                  <input
+                    className="review-book-search-input"
+                    placeholder="Pesquisar livro..."
+                    value={bookQuery}
+                    onChange={async (e) => {
+                      setBookQuery(e.target.value);
+                      if (e.target.value.length > 2) {
+                        const results = await searchBooks(e.target.value);
+                        setSuggestions(results);
+                      } else {
+                        setSuggestions([]);
+                      }
+                    }}
+                  />
+                </div>
+                {suggestions.length > 0 && (
+                  <div className="search-suggestions-dropdown">
+                    {suggestions
+                      .filter(book => book.volumeInfo)
+                      .map(book => (
+                        <div
+                          key={book.id}
+                          className="suggestion-item"
+                          onClick={() => {
+                            setBookQuery(book.volumeInfo.title);
+                            setSelectedBookId(book.id);
+                            setSuggestions([]);
+                          }}
+                        >
+                          <strong>{book.volumeInfo.title}</strong>
+                          {book.volumeInfo.authors?.[0] && (
+                            <span>— {book.volumeInfo.authors[0]}</span>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="review-field" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 24, alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label className="field-label">Classificação</label>
+                  <StarRating value={stars} onChange={setStars} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
+                  <label className="field-label">Recomendo?</label>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      className={`create-toggle-btn ${recommend === true ? 'active' : ''}`}
+                      onClick={() => setRecommend(recommend === true ? null : true)}
+                    >✓ Sim</button>
+                    <button
+                      className={`create-toggle-btn ${recommend === false ? 'active-no' : ''}`}
+                      onClick={() => setRecommend(recommend === false ? null : false)}
+                    >✗ Não</button>
                   </div>
                 </div>
+              </div>
 
-                <div className="review-field" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 24, alignItems: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <label className="field-label">Classificação</label>
-                    <StarRating value={stars} onChange={setStars} />
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-                    <label className="field-label">Recomendo?</label>
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <button
-                        className={`create-toggle-btn ${recommend === true ? 'active' : ''}`}
-                        onClick={() => setRecommend(recommend === true ? null : true)}
-                      >✓ Sim</button>
-                      <button
-                        className={`create-toggle-btn ${recommend === false ? 'active-no' : ''}`}
-                        onClick={() => setRecommend(recommend === false ? null : false)}
-                      >✗ Não</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="create-textarea-wrapper">
+              <div className="create-textarea-wrapper">
                 <textarea
-                    className="create-textarea"
-                    placeholder="Como é o desenvolvimento do personagem protagonista? O plot é bom? Te identificaste com a história? Partilha pormenores da tua leitura para incentivares outros bookstans a lerem o livro."
-                    value={content}
-                    onChange={e => e.target.value.length <= MAX_CHARS && setContent(e.target.value)}
+                  className="create-textarea"
+                  placeholder="Como é o desenvolvimento do personagem protagonista? O plot é bom? Te identificaste com a história? Partilha pormenores da tua leitura para incentivares outros bookstans a lerem o livro."
+                  value={content}
+                  onChange={e => e.target.value.length <= MAX_CHARS && setContent(e.target.value)}
                 />
                 <span className={`create-char-count ${charsLeft < 100 ? 'warning' : ''}`}>
-                    {charsLeft}
+                  {charsLeft}
                 </span>
-                </div>
+              </div>
 
-                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImage} />
-                {image ? (
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImage} />
+              {image ? (
                 <div className="review-image-preview">
-                    <img src={image} alt="anexo" />
-                    <button className="img-grid-remove" onClick={() => setImage(null)}>
+                  <img src={image} alt="anexo" />
+                  <button className="img-grid-remove" onClick={() => setImage(null)}>
                     <FontAwesomeIcon icon={faXmark} />
-                    </button>
-                </div>
-                ) : null}
-
-                <div className="create-footer" style={{ paddingTop: image ? 12 : 0 }}>
-                  <div className="create-footer-left">
-                    {!image && (
-                      <button className="create-icon-btn" onClick={() => fileRef.current.click()} title="Anexar imagem">
-                        <FontAwesomeIcon icon={faImage} />
-                      </button>
-                    )}
-                    <button
-                      className={`create-toggle-btn ${hasSpoiler ? 'active' : ''}`}
-                      onClick={() => setHasSpoiler(v => !v)}
-                      style={{ whiteSpace: 'nowrap' }}
-                    >
-                      <FontAwesomeIcon icon={faTriangleExclamation} />
-                      Contém spoiler
-                    </button>
-                  </div>
-
-                  <button
-                    className="create-post-btn"
-                    disabled={!canPost}
-                    onClick={() => alert('Post enviado!')}
-                  >
-                    <FontAwesomeIcon icon={faPaperPlane} />
-                    Publicar
                   </button>
                 </div>
+              ) : null}
+
+              <div className="create-footer" style={{ paddingTop: image ? 12 : 0 }}>
+                <div className="create-footer-left">
+                  {!image && (
+                    <button className="create-icon-btn" onClick={() => fileRef.current.click()} title="Anexar imagem">
+                      <FontAwesomeIcon icon={faImage} />
+                    </button>
+                  )}
+                  <button
+                    className={`create-toggle-btn ${hasSpoiler ? 'active' : ''}`}
+                    onClick={() => setHasSpoiler(v => !v)}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    <FontAwesomeIcon icon={faTriangleExclamation} />
+                    Contém spoiler
+                  </button>
+                </div>
+                <button
+                  className="create-post-btn"
+                  disabled={!canPost}
+                  onClick={() => alert('Post enviado!')}
+                >
+                  <FontAwesomeIcon icon={faPaperPlane} />
+                  Publicar
+                </button>
+              </div>
 
             </div>
           ) : (
 
-            /* PRÉ-VISUALIZAÇÃO */
             <div className="create-preview-card">
               <div className="post-card">
                 <div className="post-header">

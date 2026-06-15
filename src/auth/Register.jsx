@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { bannedWords } from '../utils/bannedWords'
 import { useNavigate } from "react-router-dom";
+import api from '../services/api';
 
 const Register = () => {
 
@@ -40,11 +41,7 @@ const Register = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:3333/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      const res = await api.post('/auth/register', { name, email, password, birthday })
       const text = await res.text()
       console.log('STATUS:', res.status)
       console.log('RAW RESPONSE:', text)
@@ -73,8 +70,6 @@ const Register = () => {
       localStorage.setItem('@Lanuia:token', data.token)
       localStorage.setItem('@Lanuia:user', JSON.stringify(data.user))
 
-      window.location.href = "/feed"
-      // ou se estiver usando react-router:
       navigate("/feed")
     } catch (err) {
       console.error(err)

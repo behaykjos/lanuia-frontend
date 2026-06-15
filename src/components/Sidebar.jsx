@@ -11,7 +11,7 @@ const Sidebar = () => {
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
+    const stored = localStorage.getItem("@Lanuia:user");
     if (stored) setUser(JSON.parse(stored));
   }, []);
 

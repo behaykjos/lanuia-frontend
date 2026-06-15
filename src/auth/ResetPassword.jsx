@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import heroImage from '../assets/intro.JPG';
+import api from '../services/api';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -12,7 +13,7 @@ const ResetPassword = () => {
   const [showPasswordPolicy, setShowPasswordPolicy] = useState(false);
   const navigate = useNavigate();
 
-  const storedUser = JSON.parse(localStorage.getItem("user"))
+  const storedUser = JSON.parse(localStorage.getItem("@Lanuia:user"))
   const username = storedUser?.name || ""
   const token = searchParams.get('token');
   const doPasswordsMatch = password === confirmPassword;
@@ -44,11 +45,7 @@ const ResetPassword = () => {
     }
 
     try {
-      const res = await fetch('http://localhost:3333/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
-      });
+      const res = await api.post('/auth/reset-password', { token, password });
 
       const data = await res.json();
 

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import api from '../services/api';  // 1. mudou de { api } para import default
 
 const Confirm = () => {
   const location = useLocation();
@@ -9,29 +10,22 @@ const Confirm = () => {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
     if (!token) {
-      // redireciona imediatamente sem mostrar a página
       navigate('/feed');
       return;
     }
 
-    fetch(`http://localhost:3333/auth/confirm?token=${token}`)
-      .then(async (res) => {
-        if (res.ok) {
-          // atualizar localStorage se já estivermos logados
-          const stored = localStorage.getItem('user');
-          if (stored) {
-            try {
-              const u = JSON.parse(stored);
-              u.isActive = true;
-              localStorage.setItem('user', JSON.stringify(u));
-            } catch {}
-          }
+    // 2. substituiu o fetch por api.get
+    api.get(`/auth/confirm?token=${token}`)
+      .then((res) => {
+        if (res.status === 200) {
+          const { user, token: jwtToken } = res.data;
 
-          const tokenInStorage = localStorage.getItem('token');
-          const redirectTo = tokenInStorage ? '/feed?activated=true' : '/login?activated=true';
-          navigate(redirectTo);
+          // 3. corrigiu as chaves do localStorage
+          if (user) localStorage.setItem('@Lanuia:user', JSON.stringify(user));
+          if (jwtToken) localStorage.setItem('@Lanuia:token', jwtToken);
+
+          navigate('/feed?activated=true');
         } else {
-          // falhou, vamos pro feed também (poderíamos mostrar toast/error)
           navigate('/feed');
         }
       })
@@ -40,7 +34,6 @@ const Confirm = () => {
       });
   }, [location, navigate]);
 
-  // não renderiza nada; a página só existe para executar o efeito
   return null;
 };
 

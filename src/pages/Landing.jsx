@@ -5,7 +5,8 @@ import Login from '../auth/Login';
 import Register from '../auth/Register';
 import ForgotPassword from '../auth/ForgotPassword';
 import ResetPassword from '../auth/ResetPassword';
-import heroImage from '../assets/intro.JPG' 
+import heroImage from '../assets/intro.JPG';
+import api from '../services/api';
 
 const Landing = () => {
   const [view, setView] = useState('welcome');
@@ -14,12 +15,8 @@ const Landing = () => {
 
   const handleGoogleLogin = async (credentialResponse) => {
     try {
-      const res = await fetch('http://localhost:3333/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: credentialResponse.credential,
-        }),
+      const res = await api.post('/auth/google', {
+        token: credentialResponse.credential,
       });
 
       const data = await res.json();

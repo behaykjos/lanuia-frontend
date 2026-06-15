@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
+import api from '../services/api';
 
 const Login = () => {
   const [identifier, setIdentifier] = useState('');
@@ -15,14 +16,7 @@ const Login = () => {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:3333/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier,
-          password,
-        }),
-      });
+      const res = await api.post('/auth/login', { identifier, password });
 
       const data = await res.json();
 

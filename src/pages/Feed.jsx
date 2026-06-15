@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faComment, faShareFromSquare, faStar, faPaperPlane, faFrog, faWater, faWandMagicSparkles, faCirclePlus } from '@fortawesome/free-solid-svg-icons';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import api from '../services/api';
 
 const Feed = () => {
   const navigate = useNavigate();
@@ -16,11 +17,9 @@ const Feed = () => {
     try {
       const token = localStorage.getItem('@Lanuia:token') || localStorage.getItem('token');
       if (!token) return;
-      const res = await fetch('http://localhost:3333/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const fresh = await res.json();
+      const res = await api.get('/auth/me');
+      if (res.status === 200) {
+        const fresh = res.data;
         setUser(fresh);
         localStorage.setItem('@Lanuia:user', JSON.stringify(fresh));
       }
