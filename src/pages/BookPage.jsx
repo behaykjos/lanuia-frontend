@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { getBookDetails } from '../services/googleBooks';
+import { searchAuthorsByName } from '../services/openLibrary';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faHeart, faComment, faPaperPlane, faChevronRight, faBookmark, faShareNodes } from '@fortawesome/free-solid-svg-icons';
 
@@ -16,6 +17,22 @@ const BookPage = () => {
     }
   }, [id]);
 
+  const navigate = useNavigate();
+
+  const handleAuthorClick = async (authorName) => {
+    try {
+      const authors = await searchAuthorsByName(authorName);
+      const author = authors?.[0];
+      if (author?.key) {
+        navigate(`/authorpage?key=${encodeURIComponent(author.key)}`);
+      } else {
+        navigate(`/authorpage?name=${encodeURIComponent(authorName)}`);
+      }
+    } catch {
+      navigate(`/authorpage?name=${encodeURIComponent(authorName)}`);
+    }
+  };
+
   if (!book) return (
     <div className="layout">
       <Sidebar />
@@ -26,6 +43,37 @@ const BookPage = () => {
   );
 
   const info = book.volumeInfo;
+
+  // Classificação Etária
+  const getAgeRating = (maturityRating) => {
+    const rating = maturityRating?.toUpperCase().trim();
+
+    switch (rating) {
+      case 'MATURE':
+        return '+18';
+      case 'NOT_MATURE':
+        return 'Livre'; 
+      case 'TEEN':
+      case '16+':
+        return '+16';
+      case '14+':
+        return '+14';
+      case '12+':
+        return '+12';
+      case '10+':
+      case 'LIVRE':
+      case 'FREE':
+      case 'ALL':
+        return '+10';
+      case 'TODOS':
+      case 'TODAS':
+      case 'TO DES':
+      case 'LIVRE':
+        return 'Todes';
+      default:
+        return rating || '+14';
+    }
+  };
 
   return (
     <div className="layout">
@@ -42,11 +90,25 @@ const BookPage = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <h1 className="book-title">{info.title}</h1>
                 {info.maturityRating && (
-                  <span className="book-saga-badge">{info.maturityRating === 'MATURE' ? '18+' : '14+'}</span>
+                  <span className="book-saga-badge">
+                    {getAgeRating(info.maturityRating)}
+                  </span>
                 )}
               </div>
               <p className="book-author-link">
-                {info.authors?.join(', ') || 'Autor desconhecido'}
+                {info.authors?.length > 0 ? (
+                  info.authors.map((author, index) => (
+                    <span key={author}>
+                      <span
+                        style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                        onClick={() => handleAuthorClick(author)}
+                      >
+                        {author}
+                      </span>
+                      {index < info.authors.length - 1 && ', '}
+                    </span>
+                  ))
+                ) : 'Autor desconhecido'}
               </p>
             </div>
 
@@ -177,23 +239,36 @@ const BookPage = () => {
             <div className="book-cover-large wine">{info.title}</div>
           )}
 
-          <div className="book-tags-section">
-            {info.categories?.map(cat => (
-              <span key={cat} className="post-tag">
-                #{cat.toLowerCase().replace(/\s+/g, '')}
-              </span>
-            ))}
-            {(!info.categories || info.categories.length === 0) && (
-              <>
-                <span className="post-tag">#livros</span>
-                <span className="post-tag">#lanuia</span>
-              </>
-            )}
-          </div>
+          {/* Formata as categorias em tags individuais */}
+          {(() => {
+            const rawCategories = info.categories || [];
+            const tags = [...new Set(
+              rawCategories
+                .flatMap(cat => cat.split('/'))
+                .map(tag => tag.trim().toLowerCase())
+                .filter(tag => tag.length > 0)
+            )];
 
-          <button className="books-see-more" style={{ marginTop: 12, justifyContent: 'center' }}>
-            Explorar mais... <FontAwesomeIcon icon={faChevronRight} />
-          </button>
+            return (
+              <div className="book-tags-section">
+                {tags.length > 0 ? tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="post-tag"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/books?tag=${encodeURIComponent(tag)}`)}
+                  >
+                    #{tag}
+                  </span>
+                )) : (
+                  <>
+                    <span className="post-tag" onClick={() => navigate('/books?tag=livros')} style={{ cursor: 'pointer' }}>#livros</span>
+                    <span className="post-tag" onClick={() => navigate('/books?tag=lanuia')} style={{ cursor: 'pointer' }}>#lanuia</span>
+                  </>
+                )}
+              </div>
+            );
+          })()}
 
         </aside>
 

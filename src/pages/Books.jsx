@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar';
 import { searchBooks } from '../services/googleBooks';
 // Importação atualizada para incluir o getAuthorDetails que já tens no teu ficheiro
 import { searchAuthorsByName, getAuthorImage, getAuthorDetails } from '../services/openLibrary';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faPenNib, faCirclePlus, faSeedling, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 
@@ -117,6 +117,7 @@ const Books = () => {
   const [bookResults, setBookResults] = useState([]);
   const [authorResults, setAuthorResults] = useState([]);
   const [allAuthorResults, setAllAuthorResults] = useState([]);
+  const [activeTag, setActiveTag] = useState('');
 
   const [activeTab, setActiveTab] = useState('books');
   const [loading, setLoading] = useState(false);
@@ -131,6 +132,8 @@ const Books = () => {
   const [visibleAuthors, setVisibleAuthors] = useState(12);
   const [categoryBooks, setCategoryBooks] = useState({});
   const [suggestedAuthors, setSuggestedAuthors] = useState([]);
+
+  const [searchParams] = useSearchParams();
 
   const user = JSON.parse(localStorage.getItem('@Lanuia:user') || '{}');
 
@@ -228,6 +231,30 @@ const Books = () => {
 
     loadPersonalizedData();
   }, []);
+
+  useEffect(() => {
+    const tag = searchParams.get('tag');
+    if (!tag) return;
+
+    const doTagSearch = async () => {
+      try {
+        setLoading(true);
+        setQuery(tag);
+        setActiveTag(tag);  // ← novo
+        const books = await searchBooks(`subject:${tag}`);  // ← subject: para resultados mais precisos
+        setBookResults((books || []).map(buildBookCardData).slice(0, 20));
+        setIsSearching(true);
+        setActiveTab('books');
+      } catch {
+        setBookResults(FALLBACK_BOOKS);
+        setIsSearching(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    doTagSearch();
+  }, [searchParams]);
 
   const getSuggestedAuthors = () => {
     const favoriteCategory = user.favoriteCategory || 'romance';
@@ -332,6 +359,8 @@ const Books = () => {
     const term = query.trim();
     if (term.length <= 2) return;
 
+    setActiveTag('');
+
     try {
       setLoading(true);
       setError('');
@@ -384,6 +413,7 @@ const Books = () => {
     setFeaturedAuthor(null);
     setWorksCount(null);
     setActiveTab('books');
+    setActiveTag('');
   };
 
   const handleExploreFeaturedAuthor = () => {
@@ -428,9 +458,33 @@ const Books = () => {
         )}
 
         {isSearching && (
-          <span className="btn-secondary" style={{ alignSelf: 'flex-start', marginTop: '10px', marginLeft: '40px', cursor: 'pointer' }} onClick={() => window.location.reload()}>
-            &larr; Voltar
-          </span>
+          <div 
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', // Faz um ficar embaixo do outro
+              alignItems: 'flex-start', // Alinha eles à esquerda
+              gap: 8, // Espaço vertical entre o botão e o texto
+              alignSelf: 'flex-start', 
+              marginTop: '10px', 
+              marginLeft: '40px' 
+            }}
+          >
+            <span
+              className="btn-secondary"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                window.location.href = '/books'; 
+              }}
+            >
+              &larr; Voltar
+            </span>
+            
+            {activeTag && (
+              <h3 style={{ margin: 0, fontSize: 24, color: 'var(--text-primary)' }}> {/* Mudei o fontSize de 16 para 24 */}
+                Resultados para <span style={{ color: 'var(--text-tertiary)' }}>#{activeTag}</span>
+              </h3>
+            )}
+          </div>
         )}
 
         {isSearching && (

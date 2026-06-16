@@ -95,6 +95,8 @@
   --accent-soft: var(--color-pink-300);
   --accent-extra-soft: var(--color-pink-100);
 
+  --bg-primary: var (var(--color-pink-300));
+
   --text-secondary: var(--color-pink-700);
   --text-tertiary: var(--color-pink-500);
 
@@ -106,6 +108,7 @@
 
 .theme-dark,
 [data-theme='dark'] {
+  /* Semantic Tokens */
   --bg-primary: #142717;
   --bg-secondary: #1b331f;
   --bg-tertiary: #244229;
@@ -123,11 +126,32 @@
   --border-color: #244229;
   --border-accent: #367044;
 
-  --search-bg: #244229;
-  --search-color: #e9fbed;
+  /* Component Tokens (O que estava faltando) */
+  --sidebar-bg: var(--bg-tertiary);
+  --sidebar-border: var(--border-accent);
+
+  --menu-active-bg: var(--accent-secondary);
+  --menu-hover-bg: var(--accent-extra-soft);
+
+  --search-bg: var(--bg-tertiary);
+  --search-color: var(--text-primary);
+
+  --button-bg: var(--accent-primary);
+  --profile-avatar-bg: var(--accent-secondary);
+
+  --logo-color: var(--accent-primary);
 
   --surface-muted: #1f2f23;
+
+  /* Gradient */
+  --lanuia-gradient: linear-gradient(
+    120deg,
+    var(--accent-primary),
+    var(--accent-secondary),
+    var(--accent-soft)
+  );
 }
+
 
 #root {
   max-width: 1280px;
