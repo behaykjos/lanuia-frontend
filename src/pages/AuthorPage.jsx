@@ -3,8 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGlobe, faStar, faEllipsis, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
-import { getAuthorDetails, getAuthorWorks } from '../services/openLibrary';
-import { searchBooks } from '../services/googleBooks';
+import { getAuthorDetails } from '../services/openLibrary';
+import { getBooksByAuthor } from '../services/googleBooks';
 
 const AuthorPage = () => {
   const [searchParams] = useSearchParams();
@@ -12,8 +12,8 @@ const AuthorPage = () => {
   const [following, setFollowing] = useState(false);
   const [author, setAuthor] = useState(null);
   const [works, setWorks] = useState([]);
-  const [sagas, setSagas] = useState([]);
   const [standalones, setStandalones] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [starAverage, setStarAverage] = useState(null);
   const [followers, setFollowers] = useState(0);
@@ -30,46 +30,69 @@ const AuthorPage = () => {
     const load = async () => {
       try {
         setLoading(true);
-        const [details, authorWorks] = await Promise.all([
-          getAuthorDetails(authorKey),
-          getAuthorWorks(authorKey, 40),
-        ]);
+
+        const lang = navigator.language?.substring(0, 2) || 'en';
+        const details = await getAuthorDetails(authorKey);
         setAuthor(details);
-        setWorks(authorWorks);
 
-        // Busca capas na Google Books API para as obras
-        if (details?.name && authorWorks.length > 0) {
-          const worksWithCovers = await Promise.all(
-            authorWorks.slice(0, 20).map(async (work) => {
-              try {
-                const results = await searchBooks(`${work.title} ${details.name}`);
-                const match = results?.[0];
-                const thumbnail = match?.volumeInfo?.imageLinks?.thumbnail?.replace('http://', 'https://') || null;
-                return { ...work, thumbnail, googleId: match?.id || null };
-              } catch {
-                return { ...work, thumbnail: null, googleId: null };
-              }
-            })
-          );
+        if (details?.name) {
+          const books = await getBooksByAuthor(details.name, lang, 100); 
+          setWorks(books);
 
-          // Separa sagas de standalone (heurística: obras com séries no título ou mais de 1 livro com nome similar)
-          const sagaMap = new Map();
-          const standAloneList = [];
+          // Função auxiliar para normalizar títulos
+          const normalizeTitle = (title) => {
+            return title
+              .toLowerCase()
+              .replace(/\(vol\.?\s*\d+[^)]*\)/gi, '') // Remove (vol. X) ou (volume X)
+              .replace(/[-–]\s*(trono de vidro|acotar|cidade da lua crescente|crescent city|throne of glass|a court of)[^$]*/gi, '') // Remove subtítulos de série
+              .replace(/\s*(vol\.?\s*\d+|#?\d+|livro \d+)\s*/gi, '') // Remove vol. X, #X, livro X
+              .replace(/[^a-z0-9\s]/g, '') // Remove caracteres especiais
+              .replace(/\s+/g, ' ') // Normaliza espaços múltiplos
+              .trim();
+          };
 
-          worksWithCovers.forEach((work) => {
-            // Detecta se o título tem número (ex: "Book 1", "#1") — sinal de saga
-            const hasSeries = /\b(#?\d+|book \d+|vol\.?\s*\d+|parte \d+)\b/i.test(work.title);
-            if (hasSeries) {
-              const sagaName = work.title.replace(/\s*(#?\d+|book \d+|vol\.?\s*\d+|parte \d+).*/i, '').trim();
-              if (!sagaMap.has(sagaName)) sagaMap.set(sagaName, []);
-              sagaMap.get(sagaName).push(work);
-            } else {
-              standAloneList.push(work);
+          // Deduplicação aprimorada
+          const uniqueBooks = [];
+          const seenNormalizedTitles = new Set();
+
+          // Prioriza livros no idioma do usuário
+          const booksInUserLang = books.filter(book => book.language?.startsWith(lang));
+          const otherBooks = books.filter(book => !book.language?.startsWith(lang));
+
+          [...booksInUserLang, ...otherBooks].forEach(book => {
+            const normalizedTitle = normalizeTitle(book.title);
+            if (!seenNormalizedTitles.has(normalizedTitle)) {
+              uniqueBooks.push(book);
+              seenNormalizedTitles.add(normalizedTitle);
             }
           });
 
-          setSagas([...sagaMap.entries()].map(([name, books]) => ({ name, books })));
-          setStandalones(standAloneList);
+          const collectionList = [];
+          const allWorksList = [];
+
+          uniqueBooks.forEach((book) => {
+            const title = book.title.toLowerCase();
+
+            const isCollection =
+              title.includes('box') ||
+              title.includes('collection') ||
+              title.includes('edição') ||
+              title.includes('ed.') ||
+              title.includes('deluxe') ||
+              title.includes('especial') ||
+              title.includes('limitada');
+
+            if (isCollection) {
+              collectionList.push(book);
+              return;
+            }
+
+            // Todos os livros que não são coleções vão para a lista geral de obras
+            allWorksList.push(book);
+          });
+
+          setStandalones(allWorksList);
+          setCollections(collectionList);
         }
       } catch (err) {
         console.error('Erro ao carregar autor:', err);
@@ -114,13 +137,37 @@ const AuthorPage = () => {
   const displayName = author?.name || authorName || 'Autor desconhecido';
   const initials = displayName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
+  const BookCard = ({ book, width = 138, height = 220 }) => (
+    <div
+      className="author-saga-card"
+      style={{ cursor: book.googleId ? 'pointer' : 'default' }}
+      onClick={() => book.googleId && navigate(`/bookpage/${book.googleId}`)}
+    >
+      {book.thumbnail ? (
+        <img
+          src={book.thumbnail}
+          alt={book.title}
+          style={{ width, height, objectFit: 'cover', borderRadius: 8 }}
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+        />
+      ) : (
+        <div className="book-cover rose" style={{ width, height }}>
+          {book.title}
+        </div>
+      )}
+      <span className="author-saga-title">{book.title}</span>
+      {book.first_publish_year && (
+        <span className="author-saga-year">{book.first_publish_year}</span>
+      )}
+    </div>
+  );
+
   return (
     <div className="layout">
       <Sidebar />
 
       <main className="author-main">
 
-        {/* COLUNA ESQUERDA */}
         <aside className="author-info-col">
 
           <span
@@ -149,7 +196,7 @@ const AuthorPage = () => {
 
           <div className="author-stats">
             {works.length > 0 && (
-              <span><strong>{works.length}</strong> obras</span>
+              <span><strong>{standalones.length}</strong> obras</span>
             )}
             <span className="author-stats-dot">·</span>
             <span><strong>{followers}</strong> seguidores</span>
@@ -189,79 +236,33 @@ const AuthorPage = () => {
 
         </aside>
 
-        {/* CONTEÚDO PRINCIPAL */}
         <div className="author-content">
 
-          {/* Sagas */}
-          {sagas.length > 0 && (
+          {standalones.length > 0 && (
             <div className="books-section">
               <div className="books-section-header">
-                <h3>Sagas de livros</h3>
+                <h3>Livros publicados</h3>
               </div>
-              <div className="author-sagas-row">
-                {sagas.map((saga) => (
-                  <div key={saga.name} className="author-saga-card">
-                    {saga.books[0]?.thumbnail ? (
-                      <img
-                        src={saga.books[0].thumbnail}
-                        alt={saga.name}
-                        style={{ width: 166, height: 253, objectFit: 'cover', borderRadius: 8 }}
-                      />
-                    ) : (
-                      <div className="book-cover rose" style={{ width: 166, height: 253 }}>
-                        {saga.name}
-                      </div>
-                    )}
-                    <span className="author-saga-title">{saga.name}</span>
-                    <span className="author-saga-year">{saga.books[0]?.first_publish_year || ''}</span>
-                  </div>
+              <div className="books-row">
+                {standalones.map((book) => (
+                  <BookCard key={book.key} book={book} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Livros publicados */}
-          <div className="books-section">
-            <div className="books-section-header">
-              <h3>Livros publicados</h3>
+          {collections.length > 0 && (
+            <div className="books-section">
+              <div className="books-section-header">
+                <h3>Coleções</h3>
+              </div>
+              <div className="books-row">
+                {collections.map((book) => (
+                  <BookCard key={book.key} book={book} />
+                ))}
+              </div>
             </div>
-            <div className="books-row">
-              {standalones.length > 0 ? standalones.map((work) => (
-                <div
-                  key={work.key}
-                  className="author-saga-card"
-                  style={{ cursor: work.googleId ? 'pointer' : 'default' }}
-                  onClick={() => work.googleId && navigate(`/bookpage/${work.googleId}`)}
-                >
-                  {work.thumbnail ? (
-                    <img
-                      src={work.thumbnail}
-                      alt={work.title}
-                      style={{ width: 138, height: 220, objectFit: 'cover', borderRadius: 8 }}
-                    />
-                  ) : (
-                    <div className="book-cover rose" style={{ width: 138, height: 220 }}>
-                      {work.title}
-                    </div>
-                  )}
-                  <span className="author-saga-title">{work.title}</span>
-                  {work.first_publish_year && (
-                    <span className="author-saga-year">{work.first_publish_year}</span>
-                  )}
-                </div>
-              )) : works.slice(0, 20).map((work) => (
-                <div key={work.key} className="author-saga-card">
-                  <div className="book-cover rose" style={{ width: 138, height: 220 }}>
-                    {work.title}
-                  </div>
-                  <span className="author-saga-title">{work.title}</span>
-                  {work.first_publish_year && (
-                    <span className="author-saga-year">{work.first_publish_year}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
 
         </div>
       </main>

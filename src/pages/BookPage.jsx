@@ -10,14 +10,13 @@ const BookPage = () => {
   const [savedToShelf, setSavedToShelf] = useState(false);
   const [book, setBook] = useState(null);
   const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (id) {
       getBookDetails(id).then(setBook);
     }
   }, [id]);
-
-  const navigate = useNavigate();
 
   const handleAuthorClick = async (authorName) => {
     try {
@@ -44,36 +43,69 @@ const BookPage = () => {
 
   const info = book.volumeInfo;
 
-  // Classificação Etária
-  const getAgeRating = (maturityRating) => {
-    const rating = maturityRating?.toUpperCase().trim();
+  // Sistema de classificação rigoroso focado em +18 para conteúdo maduro
+  const getAgeRating = (volumeInfo) => {
+    if (!volumeInfo) return "Livre";
 
-    switch (rating) {
-      case 'MATURE':
-        return '+18';
-      case 'NOT_MATURE':
-        return 'Livre'; 
-      case 'TEEN':
-      case '16+':
-        return '+16';
-      case '14+':
-        return '+14';
-      case '12+':
-        return '+12';
-      case '10+':
-      case 'LIVRE':
-      case 'FREE':
-      case 'ALL':
-        return '+10';
-      case 'TODOS':
-      case 'TODAS':
-      case 'TO DES':
-      case 'LIVRE':
-        return 'Todes';
-      default:
-        return rating || '+14';
+    // 1. FILTRO CRÍTICO ABSOLUTO: Se a API diz que é MATURE, força +18 imediatamente
+    if (volumeInfo.maturityRating?.toUpperCase().trim() === "MATURE") {
+      return "+18";
     }
+
+    // Normalização dos textos em inglês das categorias e dados secundários
+    const categoriesStr = volumeInfo.categories?.map(c => c.toLowerCase()).join(" ") || "";
+    const description = volumeInfo.description?.toLowerCase() || "";
+    const title = volumeInfo.title?.toLowerCase() || "";
+    const remainingText = `${title} ${description}`;
+
+    // Função auxiliar para validação exata por palavra (\b)
+    const checkTarget = (text, keywords) => {
+      return keywords.some(keyword => new RegExp(`\\b${keyword}\\b`, 'i').test(text));
+    };
+
+    // ==========================================
+    // PASSO A: VALIDAÇÃO POR CATEGORIAS (Gêneros oficiais em inglês)
+    // ==========================================
+    if (checkTarget(categoriesStr, ["erotica", "psychological", "horror", "gore", "bdsm", "crime", "hentai", "yaoi"])) {
+      return "+18";
+    }
+    if (checkTarget(categoriesStr, ["thriller", "thrillers", "suspense", "crime", "murder", "romance"])) {
+      return "+16";
+    }
+    if (checkTarget(categoriesStr, ["young adult", "ya", "dystopian", "dystopia", "teen"])) {
+      return "+14";
+    }
+    if (checkTarget(categoriesStr, ["juvenile", "middle grade", "tween"])) {
+      return "+12";
+    }
+    if (checkTarget(categoriesStr, ["children", "children's", "baby", "toddler"])) {
+      return "Livre";
+    }
+
+    // ==========================================
+    // PASSO B: VALIDAÇÃO POR TEXTO (Fallback para títulos e descrições)
+    // ==========================================
+    if (checkTarget(remainingText, ["erotica", "erotic", "dark romance", "explicit", "nsfw", "sensual"])) {
+      return "+18";
+    }
+    if (checkTarget(remainingText, ["thriller", "psychological", "psicológico", "violência", "violence", "splatterpunk"])) {
+      return "+16";
+    }
+    if (checkTarget(remainingText, ["young adult", "jovem adulto", "romance juvenil", "angst"])) {
+      return "+14";
+    }
+    if (checkTarget(remainingText, ["juvenile", "aventura juvenil", "fantasia infanto", "comic book", "manga"])) {
+      return "+12";
+    }
+    if (checkTarget(remainingText, ["infantil", "fábula", "ilustrado", "picture book", "fairy tale"])) {
+      return "Livre";
+    }
+
+    // Fallback padrão seguro caso nenhum metadado dispare os filtros anteriores
+    return "Livre";
   };
+
+  const ageRating = getAgeRating(info);
 
   return (
     <div className="layout">
@@ -89,11 +121,10 @@ const BookPage = () => {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <h1 className="book-title">{info.title}</h1>
-                {info.maturityRating && (
-                  <span className="book-saga-badge">
-                    {getAgeRating(info.maturityRating)}
-                  </span>
-                )}
+                
+                <span className={`book-saga-badge rating-${ageRating.replace('+', '')}`}>
+                  {ageRating}
+                </span>
               </div>
               <p className="book-author-link">
                 {info.authors?.length > 0 ? (

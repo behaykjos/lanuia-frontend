@@ -182,10 +182,32 @@ const Books = () => {
 
   const getAuthorWorksCount = async (authorKey) => {
     const id = authorKey.replace('/authors/', '');
+
     try {
       const res = await fetch(`https://openlibrary.org/authors/${id}/works.json?limit=1000`);
       const data = await res.json();
-      return data?.entries?.length || 0;
+
+      const entries = data?.entries || [];
+
+      const normalizeTitle = (title) =>
+        (title || '')
+          .toLowerCase()
+          .replace(/\(vol\.?\s*\d+[^)]*\)/gi, '')
+          .replace(/\s*(vol\.?\s*\d+|#?\d+|livro \d+)\s*/gi, '')
+          .replace(/[^a-z0-9\s]/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+      const seen = new Set();
+
+      const unique = entries.filter((book) => {
+        const norm = normalizeTitle(book.title);
+        if (seen.has(norm)) return false;
+        seen.add(norm);
+        return true;
+      });
+
+      return unique.length;
     } catch (err) {
       console.error(err);
       return 0;
