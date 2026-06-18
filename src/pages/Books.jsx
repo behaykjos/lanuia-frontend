@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import { searchBooks } from '../services/googleBooks';
-// Importação atualizada para incluir o getAuthorDetails que já tens no teu ficheiro
 import { searchAuthorsByName, getAuthorImage, getAuthorDetails } from '../services/openLibrary';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faPenNib, faCirclePlus, faSeedling, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faPenNib, faCirclePlus, faSeedling } from '@fortawesome/free-solid-svg-icons';
+
+const TOP_CATEGORIES = [
+  { id: 'romance',   label: 'Romance',           query: 'subject:romance bestseller' },
+  { id: 'fantasy',   label: 'Fantasia',           query: 'subject:fantasy magic' },
+  { id: 'thriller',  label: 'Thriller & Mistério', query: 'subject:thriller mystery' },
+  { id: 'ya',        label: 'Young Adult',         query: 'subject:young adult fiction' },
+  { id: 'classics',  label: 'Clássicos',           query: 'subject:classics literature' },
+];
 
 const ALL_CATEGORIES = [
   { id: 'romance', label: 'Romance', query: 'subject:romance bestseller' },
@@ -19,7 +26,7 @@ const ALL_CATEGORIES = [
   { id: 'scifi', label: 'Ficção Científica', query: 'subject:science fiction' },
   { id: 'horror', label: 'Horror', query: 'subject:horror scary' },
   { id: 'historical', label: 'Romance Histórico', query: 'historical romance regency' },
-  { id: 'contemporary', label: 'Romance Contemporâneo', query: 'contemporary romance adult' },
+  { id: 'contemporary', label: 'Contemporâneo', query: 'contemporary romance adult' },
   { id: 'newadult', label: 'New Adult', query: 'new adult romance college' },
   { id: 'paranormal', label: 'Paranormal', query: 'paranormal romance vampire' },
   { id: 'manga', label: 'Manga & Webtoon', query: 'manga romance shojo' },
@@ -40,6 +47,82 @@ const ALL_CATEGORIES = [
   { id: 'brazilian', label: 'Literatura Brasileira', query: 'literatura brasileira romance' },
 ];
 
+const CATALOG_SECTIONS = [
+  {
+    id: 'booktok',
+    label: '🔥 Favoritos do BookTok',
+    query: 'BookTok romance fiction',
+  },
+  {
+    id: 'nyt',
+    label: '📰 New York Times Bestsellers',
+    query: '"New York Times bestselling" romance fiction',
+  },
+  {
+    id: 'adapted',
+    label: '🎬 Adaptados para Cinema & Série',
+    query: 'subject:fiction adapted film bestseller romance',
+  },
+  {
+    id: 'manga',
+    label: '🌸 Mangá & Webtoon',
+    query: 'subject:manga shojo romance',
+  },
+  {
+    id: 'lovetriangle',
+    label: '💔 Triângulos Amorosos',
+    query: 'love triangle romance young adult',
+  },
+  {
+    id: 'darkromance',
+    label: '🖤 Dark Romance',
+    query: 'dark romance',
+  },
+  {
+    id: 'enemiestolovers',
+    label: '⚔️ Enemies to Lovers',
+    query: 'enemies to lovers romance',
+  },
+  {
+    id: 'fae',
+    label: '🧚 Fae & Magia',
+    query: 'fae magic court fantasy romance',
+  },
+  {
+    id: 'slowburn',
+    label: '🕯️ Slow Burn',
+    query: 'slow burn romance tension',
+  },
+  {
+    id: 'horror',
+    label: '👻 Horror & Suspense',
+    query: 'subject:horror supernatural thriller',
+  },
+  {
+    id: 'children',
+    label: '🌈 Leitura Infantil',
+    query: 'subject:juvenile fiction adventure animals',
+  },
+  {
+    id: 'recent',
+    label: '🆕 Lançamentos Recentes',
+    query: 'fiction romance 2025',
+  },
+];
+
+const FEATURED_AUTHOR_POOL = [
+  'Colleen Hoover',
+  'Sarah J. Maas',
+  'Emily Henry',
+  'Holly Black',
+  'Rebecca Yarros',
+  'Freida McFadden',
+  'Ana Huang',
+  'H.D. Carlton',
+  'Jenny Han',
+  'Stephanie Garber',
+];
+
 const FALLBACK_BOOKS = [
   { id: 'fb1', title: 'Book One', authors: ['Fallback Author'], thumbnail: '' },
   { id: 'fb2', title: 'Book Two', authors: ['Fallback Author'], thumbnail: '' },
@@ -54,25 +137,85 @@ const buildBookCardData = (item) => {
     const thumbnail =
       imageLinks?.thumbnail?.replace('http://', 'https://') ||
       imageLinks?.smallThumbnail?.replace('http://', 'https://');
-
     return {
       id: item.id,
       title: item.volumeInfo.title || 'Sem título',
       authors: item.volumeInfo.authors || [],
       thumbnail,
       volumeInfo: item.volumeInfo,
+      maturityRating: item.volumeInfo.maturityRating || 'NOT_MATURE',
     };
   }
-
   return item;
 };
 
-// FUNÇÃO AUXILIAR: Extrai apenas a primeira frase de um texto de biografia
-const getFirstSentence = (bioText) => {
+// Títulos/palavras que indicam conteúdo explícito nos títulos visíveis
+const EXPLICIT_TITLE_WORDS = [
+  'seduced', 'naked', 'bare', 'naughty', 'filthy', 'dirty', 'sinful',
+  'lust', 'erotic', 'erotica', 'seduction', 'forbidden desire', 'adults',
+  'wet', 'hard', 'stroking', 'climax', 'orgasm', 'arousal',
+];
+
+// Remove livros com título explícito ou classificados como mature pela API
+const filterSafeBooks = (books) => {
+  return books.filter((book) => {
+    if (book.maturityRating === 'MATURE') return false;
+    const titleLower = (book.title || '').toLowerCase();
+    return !EXPLICIT_TITLE_WORDS.some((word) => titleLower.includes(word));
+  });
+};
+
+// Extrai as primeiras DUAS frases de uma bio
+const getFirstTwoSentences = (bioText) => {
   if (!bioText) return '';
-  // Divide o texto no primeiro ponto final seguido de espaço ou quebra de linha
   const sentences = bioText.split(/\.\s+/);
-  return sentences[0] ? `${sentences[0]}.` : bioText;
+  if (sentences.length === 1) return bioText;
+  const two = sentences.slice(0, 2).join('. ');
+  return two.endsWith('.') ? two : `${two}.`;
+};
+
+// Escolhe um autor da pool de forma rotativa (muda a cada 12h)
+const getRotatingAuthorName = (userFavorite) => {
+  if (userFavorite) return userFavorite;
+  const key = '@Lanuia:featuredAuthorIndex';
+  const tsKey = '@Lanuia:featuredAuthorTs';
+  const INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 horas
+
+  const now = Date.now();
+  const lastTs = parseInt(localStorage.getItem(tsKey) || '0', 10);
+  let index = parseInt(localStorage.getItem(key) || '0', 10);
+
+  if (now - lastTs > INTERVAL_MS) {
+    index = (index + 1) % FEATURED_AUTHOR_POOL.length;
+    localStorage.setItem(key, String(index));
+    localStorage.setItem(tsKey, String(now));
+  }
+
+  return FEATURED_AUTHOR_POOL[index];
+};
+
+// Escolhe 5 autores sugeridos rotativos (diferentes do featured)
+const getRotatingSuggestedAuthors = (featuredName) => {
+  const key = '@Lanuia:suggestedAuthorsIndex';
+  const tsKey = '@Lanuia:suggestedAuthorsTs';
+  const INTERVAL_MS = 12 * 60 * 60 * 1000;
+
+  const now = Date.now();
+  const lastTs = parseInt(localStorage.getItem(tsKey) || '0', 10);
+  let startIndex = parseInt(localStorage.getItem(key) || '3', 10);
+
+  if (now - lastTs > INTERVAL_MS) {
+    startIndex = (startIndex + 5) % FEATURED_AUTHOR_POOL.length;
+    localStorage.setItem(key, String(startIndex));
+    localStorage.setItem(tsKey, String(now));
+  }
+
+  const pool = FEATURED_AUTHOR_POOL.filter((n) => n !== featuredName);
+  const result = [];
+  for (let i = 0; i < 5; i++) {
+    result.push(pool[(startIndex + i) % pool.length]);
+  }
+  return result;
 };
 
 const BookCard = ({ book, onAuthorClick }) => {
@@ -80,29 +223,31 @@ const BookCard = ({ book, onAuthorClick }) => {
   const authorName = book.authors?.[0] || book.volumeInfo?.authors?.[0];
 
   return (
-    <div onClick={() => navigate(`/bookpage/${book.id}`)} style={{ cursor: 'pointer', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6, width: 138 }}>
-      {/* capa — sem alterações */}
+    <div
+      onClick={() => navigate(`/bookpage/${book.id}`)}
+      style={{ cursor: 'pointer', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6, width: 138 }}
+    >
       <div style={{ width: 138, height: 220, borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', background: '#f0eaed', flexShrink: 0 }}>
         {book.thumbnail ? (
-          <img src={book.thumbnail} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { e.currentTarget.style.display = 'none' }} />
+          <img
+            src={book.thumbnail}
+            alt={book.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
         ) : (
           <div style={{ width: '100%', height: '100%', background: 'linear-gradient(160deg, #e991b0, #c45e84)', display: 'flex', alignItems: 'flex-end', padding: 8, color: 'white', fontSize: 11, fontWeight: 600, lineHeight: 1.3 }}>
             {book.title}
           </div>
         )}
       </div>
-
       <span style={{ fontSize: 12, fontWeight: 600, color: '#2F2F2F', lineHeight: 1.3, maxWidth: 138 }}>
         {book.title}
       </span>
-
       {authorName && (
         <span
           style={{ fontSize: 11, color: '#666', cursor: 'pointer' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onAuthorClick(authorName); // passa só o nome, a Books.jsx trata do resto
-          }}
+          onClick={(e) => { e.stopPropagation(); onAuthorClick(authorName); }}
         >
           {authorName}
         </span>
@@ -118,30 +263,39 @@ const Books = () => {
   const [authorResults, setAuthorResults] = useState([]);
   const [allAuthorResults, setAllAuthorResults] = useState([]);
   const [activeTag, setActiveTag] = useState('');
-
   const [activeTab, setActiveTab] = useState('books');
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  
-  const [personalizedBooks, setPersonalizedBooks] = useState([]);
-  const [featuredAuthor, setFeaturedAuthor] = useState(null);
-  const [worksCount, setWorksCount] = useState(null);
 
-  const [visibleAuthors, setVisibleAuthors] = useState(12);
-  const [categoryBooks, setCategoryBooks] = useState({});
+  // Banner: guardado no início e nunca mudado durante a sessão
+  const [featuredAuthor, setFeaturedAuthor] = useState(null);
+  const featuredAuthorLoadedRef = useRef(false);
+
+  const [personalizedBooks, setPersonalizedBooks] = useState([]);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
+  const [catalogSections, setCatalogSections] = useState({});
+  const [categoryCounts, setCategoryCounts] = useState({});
   const [suggestedAuthors, setSuggestedAuthors] = useState([]);
+  const [visibleAuthors, setVisibleAuthors] = useState(12);
+  const [worksCount, setWorksCount] = useState(null);
 
   const [searchParams] = useSearchParams();
 
   const user = JSON.parse(localStorage.getItem('@Lanuia:user') || '{}');
 
-  const buildRecommendationQuery = () => {
-    const favoriteCategory = user.favoriteCategory || 'romance';
-    const favoriteAuthor = user.favoriteAuthor || '';
-    const favoriteTags = Array.isArray(user.favoriteTags) ? user.favoriteTags : [];
+  // Livros recentemente visitados — lidos do localStorage no arranque
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('@Lanuia:recentlyViewed') || '[]');
+      setRecentlyViewed(stored.slice(0, 12));
+    } catch {
+      setRecentlyViewed([]);
+    }
+  }, []);
 
+  const buildRecommendationQuery = () => {
     const categoryMap = {
       romance: 'subject:romance bestseller',
       fantasy: 'subject:fantasy magic',
@@ -174,96 +328,156 @@ const Books = () => {
       portuguese: 'autores portugueses ficção',
       brazilian: 'literatura brasileira romance',
     };
-
+    const favoriteCategory = user.favoriteCategory || 'romance';
+    const favoriteAuthor = user.favoriteAuthor || '';
+    const favoriteTags = Array.isArray(user.favoriteTags) ? user.favoriteTags : [];
     if (favoriteAuthor) return `${favoriteAuthor} books`;
     if (favoriteTags.length > 0) return favoriteTags.slice(0, 2).join(' ');
     return categoryMap[favoriteCategory] || 'subject:romance bestseller';
   };
 
-  const getAuthorWorksCount = async (authorKey) => {
-    const id = authorKey.replace('/authors/', '');
-
-    try {
-      const res = await fetch(`https://openlibrary.org/authors/${id}/works.json?limit=1000`);
-      const data = await res.json();
-
-      const entries = data?.entries || [];
-
-      const normalizeTitle = (title) =>
-        (title || '')
-          .toLowerCase()
-          .replace(/\(vol\.?\s*\d+[^)]*\)/gi, '')
-          .replace(/\s*(vol\.?\s*\d+|#?\d+|livro \d+)\s*/gi, '')
-          .replace(/[^a-z0-9\s]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-      const seen = new Set();
-
-      const unique = entries.filter((book) => {
-        const norm = normalizeTitle(book.title);
-        if (seen.has(norm)) return false;
-        seen.add(norm);
-        return true;
-      });
-
-      return unique.length;
-    } catch (err) {
-      console.error(err);
-      return 0;
-    }
-  };
-
+  // Carrega o banner UMA vez (ao montar o componente)
   useEffect(() => {
-    const loadPersonalizedData = async () => {
+    if (featuredAuthorLoadedRef.current) return;
+    featuredAuthorLoadedRef.current = true;
+
+    const loadFeatured = async () => {
       try {
-        const preferredQuery = buildRecommendationQuery();
-        const books = await searchBooks(preferredQuery);
-        setPersonalizedBooks(books.map(buildBookCardData).slice(0, 15));
-
-        const preferredAuthorName =
-          user.favoriteAuthor ||
-          (user.favoriteCategory === 'fantasy' ? 'Sarah J. Maas' : 'Colleen Hoover');
-
-        const authorsList = await searchAuthorsByName(preferredAuthorName);
+        const authorName = getRotatingAuthorName(user.favoriteAuthor || '');
+        const authorsList = await searchAuthorsByName(authorName);
         const author = Array.isArray(authorsList) ? authorsList[0] : authorsList;
 
-        if (author && author.key) {
+        if (author?.key) {
           const image = getAuthorImage(author.key.replace('/authors/', ''));
-
           const details = await getAuthorDetails(author.key);
-          const firstSentenceBio = details?.bio 
-            ? getFirstSentence(details.bio) 
-            : 'Autora sugerida com base nas tuas preferências.';
+          const bio = details?.bio ? getFirstTwoSentences(details.bio) : 'Autora sugerida com base nas preferências da comunidade.';
 
           setFeaturedAuthor({
             name: author.name,
-            bio: firstSentenceBio,
-            image: image,
+            bio,
+            image,
             key: author.key,
           });
-
-          const count = await getAuthorWorksCount(author.key);
-          setWorksCount(count);
         }
-      } catch (err) {
-        setPersonalizedBooks(FALLBACK_BOOKS);
+      } catch {
+        // silencioso
       }
     };
 
-    loadPersonalizedData();
+    loadFeatured();
   }, []);
 
+  // Livros personalizados — sempre filtrados (aparecem logo de cara)
+  useEffect(() => {
+    const loadPersonalizedBooks = async () => {
+      try {
+        const preferredQuery = buildRecommendationQuery();
+        const books = await searchBooks(preferredQuery);
+        const safe = filterSafeBooks(books.map(buildBookCardData));
+        setPersonalizedBooks(safe.slice(0, 15));
+      } catch {
+        setPersonalizedBooks(FALLBACK_BOOKS);
+      }
+    };
+    loadPersonalizedBooks();
+  }, []);
+
+  // Secções que podem ter conteúdo adulto — não filtradas
+  const ADULT_SECTION_IDS = new Set(['sensual', 'darkromance']);
+
+  // Catálogos adicionais — carrega em lotes de 3 para não sobrecarregar a API
+  useEffect(() => {
+    const loadCatalogs = async () => {
+      const results = {};
+      const BATCH_SIZE = 3;
+
+      for (let i = 0; i < CATALOG_SECTIONS.length; i += BATCH_SIZE) {
+        const batch = CATALOG_SECTIONS.slice(i, i + BATCH_SIZE);
+
+        await Promise.all(
+          batch.map(async (section) => {
+            try {
+              const books = await searchBooks(section.query);
+              const mapped = books.map(buildBookCardData);
+              // Filtra conteúdo explícito em todas as secções excepto as adultas
+              results[section.id] = ADULT_SECTION_IDS.has(section.id)
+                ? mapped.slice(0, 10)
+                : filterSafeBooks(mapped).slice(0, 10);
+            } catch {
+              results[section.id] = [];
+            }
+          })
+        );
+
+        // Actualiza o estado após cada lote — o utilizador vê as secções aparecerem progressivamente
+        setCatalogSections((prev) => ({ ...prev, ...results }));
+
+        // Pausa entre lotes para não dar 503
+        if (i + BATCH_SIZE < CATALOG_SECTIONS.length) {
+          await new Promise((r) => setTimeout(r, 400));
+        }
+      }
+    };
+    loadCatalogs();
+  }, []);
+
+  // Contagem de livros para as top 5 categorias
+  useEffect(() => {
+    const loadCounts = async () => {
+      const counts = {};
+      for (const cat of TOP_CATEGORIES) {
+        try {
+          const books = await searchBooks(cat.query);
+          // Google Books não dá total exato, usa totalItems do primeiro resultado
+          counts[cat.id] = books?.length || 0;
+        } catch {
+          counts[cat.id] = 0;
+        }
+      }
+      setCategoryCounts(counts);
+    };
+    loadCounts();
+  }, []);
+
+  // Autores sugeridos (rotativos)
+  useEffect(() => {
+    const loadSuggestedAuthors = async () => {
+      try {
+        const featuredName = getRotatingAuthorName(user.favoriteAuthor || '');
+        const names = getRotatingSuggestedAuthors(featuredName);
+
+        const results = await Promise.all(
+          names.map(async (authorName) => {
+            const authors = await searchAuthorsByName(authorName);
+            const author = authors?.[0];
+            if (!author?.key) return { name: authorName, key: authorName, image: '', work_count: null };
+            const authorId = author.key.replace('/authors/', '');
+            return {
+              name: author.name,
+              key: author.key,
+              image: getAuthorImage(authorId),
+              work_count: author.work_count ?? null,
+            };
+          })
+        );
+        setSuggestedAuthors(results);
+      } catch {
+        setSuggestedAuthors([]);
+      }
+    };
+    loadSuggestedAuthors();
+  }, []);
+
+  // Pesquisa por tag (URL param)
   useEffect(() => {
     const tag = searchParams.get('tag');
     if (!tag) return;
-
     const doTagSearch = async () => {
       try {
         setLoading(true);
         setQuery(tag);
-        setActiveTag(tag);  // ← novo
-        const books = await searchBooks(`subject:${tag}`);  // ← subject: para resultados mais precisos
+        setActiveTag(tag);
+        const books = await searchBooks(`subject:${tag}`);
         setBookResults((books || []).map(buildBookCardData).slice(0, 20));
         setIsSearching(true);
         setActiveTab('books');
@@ -274,80 +488,13 @@ const Books = () => {
         setLoading(false);
       }
     };
-
     doTagSearch();
   }, [searchParams]);
 
-  const getSuggestedAuthors = () => {
-    const favoriteCategory = user.favoriteCategory || 'romance';
-    const favoriteAuthor = user.favoriteAuthor || '';
-    const favoriteTags = Array.isArray(user.favoriteTags) ? user.favoriteTags : [];
-
-    const suggestionsByCategory = {
-      romance: ['Colleen Hoover', 'Emily Henry', 'Ana Huang'],
-      fantasy: ['Sarah J. Maas', 'Holly Black', 'Rebecca Yarros'],
-      romantasy: ['Sarah J. Maas', 'Rebecca Yarros', 'Carissa Broadbent'],
-      dark: ['H.D. Carlton', 'Katee Robert', 'Rina Kent'],
-      ya: ['Jenny Han', 'Holly Jackson', 'Stephanie Garber'],
-      thriller: ['Freida McFadden', 'Tess Gerritsen', 'Lisa Jewell'],
-      mystery: ['Agatha Christie', 'Richard Osman', 'Louise Penny'],
-      classics: ['Jane Austen', 'George Orwell', 'Virginia Woolf'],
-      scifi: ['Frank Herbert', 'Isaac Asimov', 'Ursula K. Le Guin'],
-      horror: ['Stephen King', 'Shirley Jackson', 'Paul Tremblay'],
-    };
-
-    const base = suggestionsByCategory[favoriteCategory] || ['Colleen Hoover', 'Sarah J. Maas', 'Holly Black'];
-
-    if (favoriteAuthor) {
-      return [favoriteAuthor, ...base.filter((a) => a !== favoriteAuthor)];
-    }
-
-    return base;
-  };
-
-  useEffect(() => {
-    const loadSuggestedAuthors = async () => {
-      try {
-        const names = getSuggestedAuthors().slice(0, 3);
-
-        const results = await Promise.all(
-          names.map(async (authorName) => {
-            const authors = await searchAuthorsByName(authorName);
-            const author = authors?.[0];
-
-            if (!author?.key) {
-              return {
-                name: authorName,
-                key: authorName,
-                image: '',
-                work_count: null,
-              };
-            }
-
-            const authorId = author.key.replace('/authors/', '');
-
-            return {
-              name: author.name,
-              key: author.key,
-              image: getAuthorImage(authorId),
-              work_count: author.work_count ?? null,
-            };
-          })
-        );
-
-        setSuggestedAuthors(results);
-      } catch (err) {
-        setSuggestedAuthors([]);
-      }
-    };
-
-    loadSuggestedAuthors();
-  }, []);
-
-  const renderSection = (title, books) => {
+  const renderSection = (title, books, sectionKey) => {
     if (!books || books.length === 0) return null;
     return (
-      <div className="books-section">
+      <div key={sectionKey} className="books-section">
         <div className="books-section-header">
           <h3>{title}</h3>
         </div>
@@ -367,7 +514,6 @@ const Books = () => {
       if (author?.key) {
         navigate(`/authorpage?key=${encodeURIComponent(author.key)}`);
       } else {
-        // fallback: passa só o nome se não encontrar key
         navigate(`/authorpage?name=${encodeURIComponent(authorName)}`);
       }
     } catch {
@@ -377,10 +523,8 @@ const Books = () => {
 
   const handleSearchKeyDown = async (e) => {
     if (e.key !== 'Enter') return;
-
     const term = query.trim();
     if (term.length <= 2) return;
-
     setActiveTag('');
 
     try {
@@ -392,31 +536,14 @@ const Books = () => {
         searchAuthorsByName(term),
       ]);
 
-      const author = authors?.[0];
-
       setBookResults((books || []).map(buildBookCardData).slice(0, 15));
       setAllAuthorResults(authors || []);
       setAuthorResults((authors || []).slice(0, 12));
       setVisibleAuthors(12);
       setActiveTab('books');
-
-      if (author?.key) {
-        const image = getAuthorImage(author.key.replace('/authors/', ''));
-        const details = await getAuthorDetails(author.key);
-        const firstSentenceBio = details?.bio ? getFirstSentence(details.bio) : 'Autor encontrado na pesquisa';
-
-        setFeaturedAuthor({
-          name: author.name,
-          bio: firstSentenceBio,
-          image,
-          key: author.key,
-        });
-
-        const count = await getAuthorWorksCount(author.key);
-        setWorksCount(count);
-      }
-
       setIsSearching(true);
+
+      // NÃO atualiza o featuredAuthor aqui — fica com o banner original
     } catch (err) {
       setError('Não foi possível pesquisar neste momento.');
       setBookResults(FALLBACK_BOOKS);
@@ -424,18 +551,6 @@ const Books = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBackToCatalog = () => {
-    setQuery('');
-    setBookResults([]);
-    setAuthorResults([]);
-    setError('');
-    setIsSearching(false);
-    setFeaturedAuthor(null);
-    setWorksCount(null);
-    setActiveTab('books');
-    setActiveTag('');
   };
 
   const handleExploreFeaturedAuthor = () => {
@@ -449,6 +564,7 @@ const Books = () => {
       <Sidebar />
 
       <main className="feed">
+        {/* Banner do autor — só aparece quando NÃO está a pesquisar */}
         {!isSearching && featuredAuthor && (
           <div className="author-banner">
             <div className="author-banner-info">
@@ -464,45 +580,38 @@ const Books = () => {
                 </button>
               </div>
             </div>
-
-            <div className="author-banner-image">
-              {featuredAuthor.image ? (
-                <img 
-                  // Substitui o "-M.jpg" por "-L.jpg" dinamicamente
-                  src={featuredAuthor.image.replace('-M.jpg', '-L.jpg')} 
-                  alt={featuredAuthor.name} 
-                />
-              ) : (
+            <div
+              className="author-banner-image"
+              style={
+                featuredAuthor.image
+                  ? {
+                      backgroundImage: `url(${featuredAuthor.image.replace('-M.jpg', '-L.jpg')})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center top',
+                      backgroundRepeat: 'no-repeat',
+                    }
+                  : {}
+              }
+            >
+              {!featuredAuthor.image && (
                 <div className="book-cover-large wine">{featuredAuthor.name}</div>
               )}
             </div>
           </div>
         )}
 
+        {/* Cabeçalho de pesquisa */}
         {isSearching && (
-          <div 
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'column', // Faz um ficar embaixo do outro
-              alignItems: 'flex-start', // Alinha eles à esquerda
-              gap: 8, // Espaço vertical entre o botão e o texto
-              alignSelf: 'flex-start', 
-              marginTop: '10px', 
-              marginLeft: '40px' 
-            }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, alignSelf: 'flex-start', marginTop: '10px', marginLeft: '40px' }}>
             <span
               className="btn-secondary"
               style={{ cursor: 'pointer' }}
-              onClick={() => {
-                window.location.href = '/books'; 
-              }}
+              onClick={() => { window.location.href = '/books'; }}
             >
               &larr; Voltar
             </span>
-            
             {activeTag && (
-              <h3 style={{ margin: 0, fontSize: 24, color: 'var(--text-primary)' }}> {/* Mudei o fontSize de 16 para 24 */}
+              <h3 style={{ margin: 0, fontSize: 24, color: 'var(--text-primary)' }}>
                 Resultados para <span style={{ color: 'var(--text-tertiary)' }}>#{activeTag}</span>
               </h3>
             )}
@@ -511,16 +620,10 @@ const Books = () => {
 
         {isSearching && (
           <div className="feed-tabs">
-            <button
-              className={activeTab === 'books' ? 'active-tab' : ''}
-              onClick={() => setActiveTab('books')}
-            >
+            <button className={activeTab === 'books' ? 'active-tab' : ''} onClick={() => setActiveTab('books')}>
               Livros
             </button>
-            <button
-              className={activeTab === 'authors' ? 'active-tab' : ''}
-              onClick={() => setActiveTab('authors')}
-            >
+            <button className={activeTab === 'authors' ? 'active-tab' : ''} onClick={() => setActiveTab('authors')}>
               Autores
             </button>
           </div>
@@ -542,13 +645,10 @@ const Books = () => {
                   <p style={{ color: '#888', fontSize: 13, marginBottom: 12 }}>
                     Exibindo {Math.min(visibleAuthors, allAuthorResults.length)} de {allAuthorResults.length} autores
                   </p>
-
                   <div className="search-results-grid">
                     {allAuthorResults.slice(0, visibleAuthors).map((author) => {
                       const authorId = author.key.replace('/authors/', '');
                       const image = getAuthorImage(authorId);
-                      const count = author.work_count ?? 0;
-
                       return (
                         <div
                           key={author.key}
@@ -560,37 +660,19 @@ const Books = () => {
                             <img
                               src={image}
                               alt={author.name}
-                              style={{
-                                width: 38,
-                                height: 38,
-                                objectFit: 'cover',
-                                display: 'block',
-                                borderRadius: '50%',
-                              }}
+                              style={{ width: 38, height: 38, objectFit: 'cover', display: 'block', borderRadius: '50%' }}
                             />
                           ) : (
-                            <div
-                              style={{
-                                width: 38,
-                                height: 38,
-                                borderRadius: '50%',
-                                overflow: 'hidden',
-                                flexShrink: 0,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: '#ddd',
-                              }}
-                            >
+                            <div style={{ width: 38, height: 38, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ddd' }}>
                               ?
                             </div>
                           )}
-
                           <div className="suggestion-info">
                             <span className="suggestion-name">{author.name}</span>
-                            <span className="suggestion-total">{author.work_count != null ? `${author.work_count} livros publicados` : 'Sem dados'}</span>
+                            <span className="suggestion-total">
+                              {author.work_count != null ? `${author.work_count} livros publicados` : 'Sem dados'}
+                            </span>
                           </div>
-
                           <button className="follow-btn" onClick={(e) => e.stopPropagation()}>
                             <FontAwesomeIcon icon={faCirclePlus} />
                           </button>
@@ -598,7 +680,6 @@ const Books = () => {
                       );
                     })}
                   </div>
-
                   {visibleAuthors < allAuthorResults.length && (
                     <span
                       className="btn-secondary"
@@ -614,7 +695,11 @@ const Books = () => {
             </>
           ) : (
             <>
-              {renderSection('✨ Recomendados para ti', personalizedBooks)}
+              {recentlyViewed.length > 0 && renderSection('🕐 Recentemente Visitados', recentlyViewed, 'recently-viewed')}
+              {renderSection('✨ Recomendados para ti', personalizedBooks, 'personalized')}
+              {CATALOG_SECTIONS.map((section) =>
+                renderSection(section.label, catalogSections[section.id], section.id)
+              )}
             </>
           )}
         </div>
@@ -629,7 +714,6 @@ const Books = () => {
             onChange={(e) => {
               const value = e.target.value;
               setQuery(value);
-
               if (value.trim() === '') {
                 setIsSearching(false);
                 setBookResults([]);
@@ -642,18 +726,44 @@ const Books = () => {
           />
         </div>
 
+        {/* Top 5 categorias com contagem */}
         <div className="tags-box">
           <h3><FontAwesomeIcon icon={faSeedling} /> Categorias</h3>
-          {ALL_CATEGORIES.slice(0, 10).map((cat) => (
-            <div key={cat.id} className="tag-card">
-              <p>{cat.label}</p>
+          {TOP_CATEGORIES.map((cat) => (
+            <div
+              key={cat.id}
+              className="tag-card"
+              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 6 }}
+              onClick={() => {
+                setQuery(cat.label);
+                setActiveTag(cat.id);
+                setLoading(true);
+                searchBooks(cat.query)
+                  .then((books) => {
+                    setBookResults((books || []).map(buildBookCardData).slice(0, 20));
+                    setIsSearching(true);
+                    setActiveTab('books');
+                  })
+                  .catch(() => {
+                    setBookResults(FALLBACK_BOOKS);
+                    setIsSearching(true);
+                  })
+                  .finally(() => setLoading(false));
+              }}
+            >
+              <p style={{ margin: 0, flex: 1, textAlign: 'left' }}>{cat.label}</p>
+              {categoryCounts[cat.id] != null && (
+                <span style={{ fontSize: 11, color: 'var(--text-tertiary)', flexShrink: 0 }}>
+                  {categoryCounts[cat.id]}+
+                </span>
+              )}
             </div>
           ))}
         </div>
 
+        {/* Autores sugeridos */}
         <div className="suggestions-box">
           <h3><FontAwesomeIcon icon={faPenNib} /> Autores para ti</h3>
-
           {suggestedAuthors.map((author) => (
             <div
               key={author.key}
@@ -666,18 +776,14 @@ const Books = () => {
                 alt={author.name}
                 className="profile-avatar"
                 style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover' }}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
-
               <div className="suggestion-info">
                 <span className="suggestion-name">{author.name}</span>
                 <span className="suggestion-total">
-                  {author.work_count ?? 0} livros publicados
+                  {author.work_count != null ? `${author.work_count} livros publicados` : 'Autor'}
                 </span>
               </div>
-
               <button className="follow-btn" onClick={(e) => e.stopPropagation()}>
                 <FontAwesomeIcon icon={faCirclePlus} />
               </button>

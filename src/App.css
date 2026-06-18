@@ -1042,8 +1042,10 @@ button.menu-item {
 
 .author-banner-image {
   width: 50%;
+  height: 100%;
   position: relative;
-  flex-shrink: 0;
+  object-fit: cover;
+  object-position: center;
 }
 
 .author-banner-image::before {

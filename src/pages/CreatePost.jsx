@@ -1,23 +1,29 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faImage, faXmark, faLightbulb, faTriangleExclamation,
+  faImage, faXmark, faTriangleExclamation,
   faHashtag, faPaperPlane, faEye, faEyeSlash,
-  faWandMagicSparkles, faHeart, faComment
+  faWandMagicSparkles, faHeart, faComment, faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import ImageGrid from '../components/ImageGrid';
+import api from '../services/api';
 
 const MAX_CHARS = 2000;
 
-const Create = () => {
+const CreatePost = () => {
+  const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [isTheory, setIsTheory] = useState(false);
   const [hasSpoiler, setHasSpoiler] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState([]);
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState([]); // URLs locais para preview
   const [preview, setPreview] = useState(false);
+  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const fileRef = useRef(null);
 
   const charsLeft = MAX_CHARS - content.length;
@@ -27,7 +33,7 @@ const Create = () => {
     const remaining = 10 - images.length;
     const toAdd = files.slice(0, remaining).map(f => URL.createObjectURL(f));
     setImages(prev => [...prev, ...toAdd]);
-    e.target.value = ''; // permite selecionar as mesmas imagens de novo
+    e.target.value = '';
   };
 
   const removeImage = (index) => {
@@ -45,8 +51,65 @@ const Create = () => {
 
   const removeTag = (tag) => setTags(prev => prev.filter(t => t !== tag));
 
-  const canPost = content.trim().length > 0;
-  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
+  const handleSubmit = async () => {
+    if (!content.trim()) return;
+    setLoading(true);
+    setError('');
+
+    try {
+      // 1. Vai buscar o token armazenado no localStorage
+      const storedUser = localStorage.getItem('@Lanuia:user');
+      const userData = storedUser ? JSON.parse(storedUser) : null;
+      const token = userData?.token; // Confirma se a propriedade se chama 'token' no teu backend
+
+      // Se não houver token, bloqueia antes de gastar largura de banda
+      if (!token) {
+        setError('Sessão expirada. Por favor, faz login novamente.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Cria a configuração com o Header Authorization Bearer
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      };
+
+      const imageUrl = images.find(img => img.startsWith('http')) ?? null;
+
+      // 3. Passa a 'config' como o terceiro parâmetro do api.post
+      await api.post('/posts', {
+        content: content.trim(),
+        image: imageUrl,
+        hasSpoiler,
+        isTheory,
+        tags,
+      }, config); // <--- O segredo está aqui
+
+      // Reset do formulário
+      setContent('');
+      setIsTheory(false);
+      setHasSpoiler(false);
+      setTags([]);
+      setImages([]);
+      setPreview(false);
+
+      navigate('/feed');
+    } catch (err) {
+      console.error(err);
+      // Exibe uma mensagem mais clara caso o servidor devolva 401 explicitamente
+      if (err.response?.status === 401) {
+        setError('Não autorizado. O teu login pode ter expirado.');
+      } else {
+        setError('Erro ao publicar. Tenta novamente.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const user = JSON.parse(localStorage.getItem('@Lanuia:user') || '{}');
 
   return (
     <div className="layout">
@@ -66,10 +129,15 @@ const Create = () => {
             </button>
           </div>
 
+          {error && (
+            <div className="warning-banner" style={{ borderRadius: 10, marginBottom: 12 }}>
+              {error}
+            </div>
+          )}
+
           {!preview ? (
             <div className="create-form">
 
-              {/* Tipo de publicação */}
               <div className="create-toggles">
                 <button
                   className={`create-toggle-btn ${isTheory ? 'active' : ''}`}
@@ -87,7 +155,6 @@ const Create = () => {
                 </button>
               </div>
 
-              {/* Área de texto */}
               <div className="create-textarea-wrapper">
                 <textarea
                   className="create-textarea"
@@ -100,10 +167,8 @@ const Create = () => {
                 </span>
               </div>
 
-              {/* Imagem anexada */}
               <ImageGrid images={images} onRemove={removeImage} editable={true} />
 
-              {/* Tags */}
               <div className="create-tags-wrapper">
                 <FontAwesomeIcon icon={faHashtag} style={{ color: 'var(--search-color)', flexShrink: 0 }} />
                 <div className="create-tags-input-area">
@@ -125,7 +190,6 @@ const Create = () => {
                 </div>
               </div>
 
-              {/* Rodapé */}
               <div className="create-footer">
                 <div className="create-footer-left">
                   <input
@@ -149,27 +213,24 @@ const Create = () => {
 
                 <button
                   className="create-post-btn"
-                  disabled={!canPost}
-                  onClick={() => alert('Post enviado!')}
+                  disabled={!content.trim() || loading}
+                  onClick={handleSubmit}
                 >
-                  <FontAwesomeIcon icon={faPaperPlane} />
-                  Publicar
+                  {loading
+                    ? <FontAwesomeIcon icon={faSpinner} spin />
+                    : <><FontAwesomeIcon icon={faPaperPlane} /> Publicar</>
+                  }
                 </button>
               </div>
 
             </div>
           ) : (
-            /* Pré-visualização */
             <div className="create-preview-card">
               <div className="post-card">
                 <div className="post-header">
-                  <div className="profile-avatar">
-                    {JSON.parse(localStorage.getItem('@Lanuia:user') || '{}')?.name?.[0] || 'T'}
-                  </div>
+                  <div className="profile-avatar">{user?.name?.[0] || 'T'}</div>
                   <div className="post-info">
-                    <p className="post-name">
-                      {JSON.parse(localStorage.getItem('@Lanuia:user') || '{}')?.name || 'Tu'}
-                    </p>
+                    <p className="post-name">{user?.name || 'Tu'}</p>
                   </div>
                   <span className="post-more">···</span>
                 </div>
@@ -177,12 +238,9 @@ const Create = () => {
                 {hasSpoiler ? (
                   <div style={{ position: 'relative' }}>
                     <div style={{ filter: spoilerRevealed ? 'none' : 'blur(8px)' }}>
-                      <p className="post-content">
-                        {content || 'Conteúdo do teu post vai aparecer aqui...'}
-                      </p>
+                      <p className="post-content">{content || 'Conteúdo do teu post vai aparecer aqui...'}</p>
                       <ImageGrid images={images} />
                     </div>
-
                     {!spoilerRevealed && (
                       <button
                         className="post-show-btn"
@@ -214,7 +272,6 @@ const Create = () => {
                       <FontAwesomeIcon icon={faWandMagicSparkles} /> Teoria
                     </span>
                   )}
-                  &nbsp;
                   {hasSpoiler && <span className="post-show">Contém spoiler</span>}
                   <div className="post-action-group">
                     <span><FontAwesomeIcon icon={faHeart} /> 0</span>
@@ -233,4 +290,4 @@ const Create = () => {
   );
 };
 
-export default Create;
+export default CreatePost;

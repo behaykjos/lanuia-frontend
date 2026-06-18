@@ -55,6 +55,31 @@ const CreateReview = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Efeito de DEBOUNCE: Só faz a chamada à API 500ms após o utilizador parar de digitar
+  useEffect(() => {
+    if (bookQuery.trim().length <= 2) {
+      setSuggestions([]);
+      return;
+    }
+
+    // Se o texto atual for exatamente igual ao título do livro selecionado, não pesquisa de novo
+    if (suggestions.some(book => book.volumeInfo?.title === bookQuery)) {
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const results = await searchBooks(bookQuery);
+        setSuggestions(results || []);
+      } catch (err) {
+        console.error("Erro ao procurar livros na Google Books API:", err);
+        setSuggestions([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [bookQuery]);
+
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -109,37 +134,63 @@ const CreateReview = () => {
                     className="review-book-search-input"
                     placeholder="Pesquisar livro..."
                     value={bookQuery}
-                    onChange={async (e) => {
-                      setBookQuery(e.target.value);
-                      if (e.target.value.length > 2) {
-                        const results = await searchBooks(e.target.value);
-                        setSuggestions(results);
-                      } else {
-                        setSuggestions([]);
-                      }
-                    }}
+                    onChange={(e) => setBookQuery(e.target.value)}
                   />
                 </div>
+
                 {suggestions.length > 0 && (
-                  <div className="search-suggestions-dropdown">
+                  <div className="search-suggestions-dropdown" style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: '#fff',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    borderRadius: '8px',
+                    zIndex: 1000,
+                    maxHeight: '250px',
+                    overflowY: 'auto',
+                    marginTop: '4px'
+                  }}>
                     {suggestions
                       .filter(book => book.volumeInfo)
-                      .map(book => (
-                        <div
-                          key={book.id}
-                          className="suggestion-item"
-                          onClick={() => {
-                            setBookQuery(book.volumeInfo.title);
-                            setSelectedBookId(book.id);
-                            setSuggestions([]);
-                          }}
-                        >
-                          <strong>{book.volumeInfo.title}</strong>
-                          {book.volumeInfo.authors?.[0] && (
-                            <span>— {book.volumeInfo.authors[0]}</span>
-                          )}
-                        </div>
-                      ))}
+                      .map(book => {
+                        const thumbnail = book.volumeInfo.imageLinks?.smallThumbnail || book.volumeInfo.imageLinks?.thumbnail;
+
+                        return (
+                          <div
+                            key={book.id}
+                            className="suggestion-item"
+                            onClick={() => {
+                              setBookQuery(book.volumeInfo.title);
+                              setSelectedBookId(book.id);
+                              setSuggestions([]); 
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                              padding: '10px 12px',
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #f0eaed'
+                            }}
+                          >
+                            {thumbnail && (
+                              <img 
+                                src={thumbnail.replace('http://', 'https://')} 
+                                alt="" 
+                                style={{ width: '30px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} 
+                              />
+                            )}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <strong style={{ fontSize: '13px', color: '#2F2F2F' }}>{book.volumeInfo.title}</strong>
+                              {book.volumeInfo.authors?.[0] && (
+                                <span style={{ fontSize: '11px', color: '#666' }}>{book.volumeInfo.authors[0]}</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </div>
@@ -214,7 +265,6 @@ const CreateReview = () => {
 
             </div>
           ) : (
-
             <div className="create-preview-card">
               <div className="post-card">
                 <div className="post-header">

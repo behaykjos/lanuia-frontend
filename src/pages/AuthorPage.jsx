@@ -36,26 +36,22 @@ const AuthorPage = () => {
         setAuthor(details);
 
         if (details?.name) {
-          const books = await getBooksByAuthor(details.name, lang, 100); 
+          const books = await getBooksByAuthor(details.name, lang, 100);
           setWorks(books);
 
-          // Função auxiliar para normalizar títulos
           const normalizeTitle = (title) => {
             return title
               .toLowerCase()
-              .replace(/\(vol\.?\s*\d+[^)]*\)/gi, '') // Remove (vol. X) ou (volume X)
-              .replace(/[-–]\s*(trono de vidro|acotar|cidade da lua crescente|crescent city|throne of glass|a court of)[^$]*/gi, '') // Remove subtítulos de série
-              .replace(/\s*(vol\.?\s*\d+|#?\d+|livro \d+)\s*/gi, '') // Remove vol. X, #X, livro X
-              .replace(/[^a-z0-9\s]/g, '') // Remove caracteres especiais
-              .replace(/\s+/g, ' ') // Normaliza espaços múltiplos
+              .replace(/\(vol\.?\s*\d+[^)]*\)/gi, '')
+              .replace(/[-–]\s*(trono de vidro|acotar|cidade da lua crescente|crescent city|throne of glass|a court of)[^$]*/gi, '')
+              .replace(/\s*(vol\.?\s*\d+|#?\d+|livro \d+)\s*/gi, '')
+              .replace(/[^a-z0-9\s]/g, '')
+              .replace(/\s+/g, ' ')
               .trim();
           };
 
-          // Deduplicação aprimorada
           const uniqueBooks = [];
           const seenNormalizedTitles = new Set();
-
-          // Prioriza livros no idioma do usuário
           const booksInUserLang = books.filter(book => book.language?.startsWith(lang));
           const otherBooks = books.filter(book => !book.language?.startsWith(lang));
 
@@ -72,7 +68,6 @@ const AuthorPage = () => {
 
           uniqueBooks.forEach((book) => {
             const title = book.title.toLowerCase();
-
             const isCollection =
               title.includes('box') ||
               title.includes('collection') ||
@@ -84,11 +79,9 @@ const AuthorPage = () => {
 
             if (isCollection) {
               collectionList.push(book);
-              return;
+            } else {
+              allWorksList.push(book);
             }
-
-            // Todos os livros que não são coleções vão para a lista geral de obras
-            allWorksList.push(book);
           });
 
           setStandalones(allWorksList);
@@ -148,7 +141,7 @@ const AuthorPage = () => {
           src={book.thumbnail}
           alt={book.title}
           style={{ width, height, objectFit: 'cover', borderRadius: 8 }}
-          onError={(e) => { e.currentTarget.style.display = 'none' }}
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
       ) : (
         <div className="book-cover rose" style={{ width, height }}>
@@ -178,17 +171,40 @@ const AuthorPage = () => {
             <FontAwesomeIcon icon={faChevronLeft} /> Voltar
           </span>
 
-          <div className="author-avatar-wrapper">
+          {/* Avatar: wrapper quadrado com overflow hidden garante círculo perfeito */}
+          <div
+            className="author-avatar-wrapper"
+            style={{
+              width: 150,
+              height: 150,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              flexShrink: 0,
+              alignSelf: 'center',
+              background: '#e8d5dc',
+            }}
+          >
             {author?.image ? (
               <img
                 src={author.image.replace('-M.jpg', '-L.jpg')}
                 alt={displayName}
-                className="author-avatar-large"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center top',
+                  display: 'block',
+                }}
+                onError={(e) => {
+                  // Se a imagem falhar, mostra as iniciais
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:600;color:#c45e84;">${initials}</div>`;
+                }}
               />
             ) : (
-              <div className="author-avatar-large">{initials}</div>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 600, color: '#c45e84' }}>
+                {initials}
+              </div>
             )}
           </div>
 
@@ -254,7 +270,7 @@ const AuthorPage = () => {
           {collections.length > 0 && (
             <div className="books-section">
               <div className="books-section-header">
-                <h3>Coleções</h3>
+                <h3>Edições Especiais</h3>
               </div>
               <div className="books-row">
                 {collections.map((book) => (

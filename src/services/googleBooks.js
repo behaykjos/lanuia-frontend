@@ -29,68 +29,35 @@ export async function getBookDetails(id) {
 export async function getBooksByAuthor(authorName, lang = 'en', limit = 40) {
   if (!authorName) return [];
 
-  try {
-    const fetchBooks = async (langRestrict) => {
-      const params = new URLSearchParams({
-        q: `inauthor:"${authorName}"`,
-        maxResults: '40',
-        langRestrict,
-        key: API_KEY,
-      });
+  const fetchBooks = async (langRestrict, retries = 2, delay = 1000) => {
+    const params = new URLSearchParams({
+      q: `inauthor:"${authorName}"`,
+      maxResults: '40',
+      langRestrict,
+      key: API_KEY,
+    });
+
+    try {
       const res = await fetch(`${GOOGLE_BOOKS_API}/volumes?${params}`);
+      
+      // Se der erro 503 (ou 429 de limite) e ainda tivermos tentativas restando
+      if ((res.status === 503 || res.status === 429) && retries > 0) {
+        console.warn(`Servidor instável (Status ${res.status}). Tentando novamente em ${delay}ms...`);
+        // Aguarda o tempo estipulado
+        await new Promise(resolve => setTimeout(resolve, delay));
+        // Tenta de novo, diminuindo 1 tentativa e dobrando o tempo de espera
+        return await fetchBooks(langRestrict, retries - 1, delay * 2);
+      }
+
       if (!res.ok) return [];
       const data = await res.json();
       return data.items || [];
-    };
-
-    // busca em PT e EN em paralelo
-    const [ptBooks, enBooks] = await Promise.all([
-      fetchBooks(lang === 'en' ? 'en' : 'pt'),
-      fetchBooks('en'),
-    ]);
-
-    // formata todos
-    const format = (item) => {
-      const info = item.volumeInfo;
-      const thumbnail =
-        info.imageLinks?.thumbnail?.replace('http://', 'https://') ||
-        info.imageLinks?.smallThumbnail?.replace('http://', 'https://') ||
-        null;
-      return {
-        key: item.id,
-        googleId: item.id,
-        title: info.title || 'Sem título',
-        first_publish_year: info.publishedDate
-          ? parseInt(info.publishedDate.substring(0, 4))
-          : null,
-        thumbnail,
-        language: info.language || lang,
-        categories: info.categories || [],
-      };
-    };
-
-    const ptFormatted = ptBooks.map(format);
-    const enFormatted = enBooks.map(format);
-
-    // junta: PT tem prioridade, EN preenche o que faltar
-    const seen = new Set();
-    const result = [];
-
-    for (const book of [...ptFormatted, ...enFormatted]) {
-      const normalized = book.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      if (!seen.has(normalized)) {
-        seen.add(normalized);
-        result.push(book);
+    } catch (error) {
+      if (retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return await fetchBooks(langRestrict, retries - 1, delay * 2);
       }
+      return [];
     }
-
-    return result;
-  } catch (error) {
-    console.error('Erro ao buscar livros do autor:', error);
-    return [];
-  }
+  };
 }
