@@ -18,7 +18,6 @@ const ResetPassword = () => {
   const token = searchParams.get('token');
   const doPasswordsMatch = password === confirmPassword;
 
-  // Validação de password (mesma política do Register)
   const validatePassword = (pwd) => ({
     minLength: pwd.length >= 8,
     hasUppercase: /[A-Z]/.test(pwd),
@@ -45,18 +44,13 @@ const ResetPassword = () => {
     }
 
     try {
-      const res = await api.post('/auth/reset-password', { token, password });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to reset password');
-      }
+      await api.post('/auth/reset-password', { token, password });
 
       setMessage('Password reset successfully! You can now log in.');
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
-      setError(err.message);
+      const errorMessage = err.response?.data?.error || 'Failed to reset password';
+      setError(errorMessage);
     }
   };
 
@@ -81,9 +75,10 @@ const ResetPassword = () => {
     <div className="landing">
       {/* ESQUERDA */}
       <div className="landing-left">
-        <div style={{ padding: '40px', maxWidth: '400px' }}>
-          <h1 className="lanuia">Set New Password</h1>
+        <div style={{ padding: '40px', maxWidth: '500px' }}>
+          <h1 className="lanuia">Set New<br />Password</h1>
           <p>Please enter your new password below.</p>
+          &nbsp;
           
           <form onSubmit={handleSubmit}>
             <div className="field"
@@ -132,26 +127,26 @@ const ResetPassword = () => {
               <label className="field-label">Confirm New Password</label>
               <div className="password-wrapper" style={{ position: 'relative' }}>
                 <input
-                type="password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                style={{ paddingRight: '30px' }} // espaço para o ícone
-              />
-              {confirmPassword && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    right: '8px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    fontSize: '18px',
-                    color: doPasswordsMatch ? 'green' : 'red',
-                  }}
-                >
-                  {doPasswordsMatch ? '✓' : '✗'}
-                </span>
+                  type="password"
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  style={{ paddingRight: '30px' }}
+                />
+                {confirmPassword && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      fontSize: '18px',
+                      color: doPasswordsMatch ? 'green' : 'red',
+                    }}
+                  >
+                    {doPasswordsMatch ? '✓' : '✗'}
+                  </span>
                 )}
               </div>
             </div>

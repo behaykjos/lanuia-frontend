@@ -30,10 +30,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Se o backend retornar 401, o token é inválido ou expirou
-      // localStorage.removeItem('@Lanuia:token');
-      // localStorage.removeItem('@Lanuia:user');
-      // window.location.href = '/login';
+      localStorage.removeItem('@Lanuia:token');
+      localStorage.removeItem('@Lanuia:user');
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }

@@ -6,7 +6,7 @@ import { faChevronRight, faLock, faGlobe, faPen, faPlus, faXmark } from '@fortaw
 const SHELVES = [
   {
     id: 1,
-    title: 'Melhores romances do booktok',
+    title: 'Best booktok romances',
     isPublic: true,
     books: [
       { id: 1, color: 'pink', title: 'It Ends with Us' },
@@ -18,7 +18,7 @@ const SHELVES = [
   },
   {
     id: 2,
-    title: 'Recomendados pra mim',
+    title: 'Recommended for me',
     isPublic: false,
     books: [
       { id: 6, color: 'sage', title: 'The Flatshare' },
@@ -29,7 +29,7 @@ const SHELVES = [
   },
   {
     id: 3,
-    title: 'Fantasia épica',
+    title: 'Epic fantasy',
     isPublic: true,
     books: [
       { id: 10, color: 'wine', title: 'ACOTAR' },
@@ -53,7 +53,7 @@ const EditModal = ({ shelf, onClose, onSave }) => {
         </button>
 
         <div className="field" style={{ marginBottom: 20 }}>
-          <label className="field-label">Título</label>
+          <label className="field-label">Title</label>
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
@@ -62,7 +62,7 @@ const EditModal = ({ shelf, onClose, onSave }) => {
         </div>
 
         <div className="field" style={{ marginBottom: 28 }}>
-          <label className="field-label" style={{ marginBottom: 10, display: 'block' }}>Visibilidade</label>
+          <label className="field-label" style={{ marginBottom: 10, display: 'block' }}>Visibility</label>
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={() => setIsPublic(true)}
@@ -75,7 +75,7 @@ const EditModal = ({ shelf, onClose, onSave }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
               }}
             >
-              <FontAwesomeIcon icon={faGlobe} /> Pública
+              <FontAwesomeIcon icon={faGlobe} /> Public
             </button>
             <button
               onClick={() => setIsPublic(false)}
@@ -88,7 +88,7 @@ const EditModal = ({ shelf, onClose, onSave }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
               }}
             >
-              <FontAwesomeIcon icon={faLock} /> Privada
+              <FontAwesomeIcon icon={faLock} /> Private
             </button>
           </div>
         </div>
@@ -97,7 +97,7 @@ const EditModal = ({ shelf, onClose, onSave }) => {
           onClick={() => onSave({ title, isPublic })}
           style={{
             width: '100%', padding: '12px', borderRadius: 20,
-            background: '#E8AFC2', color: 'white', border: 'none',
+            background: 'var(--accent-extra-soft', color: 'white', border: 'none',
             fontWeight: 700, fontSize: 15, cursor: 'pointer'
           }}
         >
@@ -128,10 +128,10 @@ const Shelf = () => {
 
           <div className="shelf-header">
             <h1 className="shelf-title">
-              Estante de livros
+              Book shelf
             </h1>
             <button className="shelf-new-btn">
-              <FontAwesomeIcon icon={faPlus} /> Criar nova </button>
+              <FontAwesomeIcon icon={faPlus} /> Create new </button>
           </div>
 
           {shelves.map(shelf => (
@@ -142,7 +142,7 @@ const Shelf = () => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <span className="books-see-more">
-                    Ver todos <FontAwesomeIcon icon={faChevronRight} />
+                    See more <FontAwesomeIcon icon={faChevronRight} />
                   </span>
                 </div>
               </div>
@@ -153,7 +153,7 @@ const Shelf = () => {
                     {shelf.isPublic ? ' Pública' : ' Privada'}
                 </span>
                 &nbsp;
-                <span className="shelf-count">{shelf.books.length} livros</span>
+                <span className="shelf-count">{shelf.books.length} books</span>
               </p>
               <br></br>
 

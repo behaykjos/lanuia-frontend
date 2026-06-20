@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChampagneGlasses } from '@fortawesome/free-solid-svg-icons';
+
 
 const ActivateAccount = () => {
   const [status, setStatus] = useState('activating'); // 'activating', 'success', 'error'
@@ -50,7 +53,7 @@ const ActivateAccount = () => {
 
       {status === 'success' && (
         <>
-          <h1 style={{ color: 'green' }}>Account Activated! 🎉</h1>
+          <h1 style={{ color: 'green' }}>Account Activated! <FontAwesomeIcon icon={faChampagneGlasses} /></h1>
           <p>Your email has been successfully verified. You will be redirected to login in a few seconds.</p>
           <button onClick={() => navigate('/login')} className="primary-btn">Go to Login Now</button>
         </>

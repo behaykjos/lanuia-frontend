@@ -11,16 +11,36 @@ export function getAuthorImage(authorId) {
   return `https://covers.openlibrary.org/a/olid/${id}-M.jpg`;
 }
 
+// Utilitário genérico de fetch com retry, igual ao do Google Books
+async function fetchWithRetry(url, retries = 2, delay = 800) {
+  try {
+    const res = await fetch(url);
+
+    if ((res.status === 429 || res.status === 503) && retries > 0) {
+      console.warn(`Open Library instável (Status ${res.status}). Retry em ${delay}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return await fetchWithRetry(url, retries - 1, delay * 2);
+    }
+
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    if (retries > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return await fetchWithRetry(url, retries - 1, delay * 2);
+    }
+    console.error('Erro de rede na Open Library:', error);
+    return null;
+  }
+}
+
 export async function searchAuthorsByName(query) {
   if (!query) return [];
 
   try {
-    const res = await fetch(
-      `https://openlibrary.org/search/authors.json?q=${encodeURIComponent(query)}`
-    );
-    if (!res.ok) return [];
-
-    const data = await res.json();
+    const url = `${OPEN_LIBRARY_API}/search/authors.json?q=${encodeURIComponent(query)}`;
+    const data = await fetchWithRetry(url);
+    if (!data) return [];
 
     return (data.docs || []).map((author) => ({
       key: author.key,
@@ -41,10 +61,8 @@ export async function getAuthorDetails(authorKey) {
 
   try {
     const key = authorKey.startsWith('/authors/') ? authorKey : `/authors/${authorKey}`;
-    const res = await fetch(`${OPEN_LIBRARY_API}${key}.json`);
-    if (!res.ok) return null;
-
-    const data = await res.json();
+    const data = await fetchWithRetry(`${OPEN_LIBRARY_API}${key}.json`);
+    if (!data) return null;
 
     return {
       key,
@@ -70,18 +88,22 @@ export async function getAuthorWorks(authorKey, limit = 20) {
 
   try {
     const key = authorKey.startsWith('/authors/') ? authorKey : `/authors/${authorKey}`;
-    const res = await fetch(`${OPEN_LIBRARY_API}${key}/works.json?limit=${limit}`);
-    if (!res.ok) return [];
-
-    const data = await res.json();
+    const data = await fetchWithRetry(`${OPEN_LIBRARY_API}${key}/works.json?limit=${limit}`);
+    if (!data) return [];
 
     return (data.entries || []).map((work) => ({
       key: work.key,
       title: work.title,
       first_publish_year: work.first_publish_year || null,
+      coverId: work.covers?.[0] || null,
     }));
   } catch (error) {
     console.error('Erro ao obter obras do autor:', error);
     return [];
   }
+}
+
+export function getWorkCoverUrl(coverId) {
+  if (!coverId) return null;
+  return `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
 }

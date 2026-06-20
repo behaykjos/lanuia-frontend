@@ -64,7 +64,7 @@ const CreatePost = () => {
 
       // Se não houver token, bloqueia antes de gastar largura de banda
       if (!token) {
-        setError('Sessão expirada. Por favor, faz login novamente.');
+        setError('Session expired. Please, log in again.');
         setLoading(false);
         return;
       }
@@ -100,9 +100,9 @@ const CreatePost = () => {
       console.error(err);
       // Exibe uma mensagem mais clara caso o servidor devolva 401 explicitamente
       if (err.response?.status === 401) {
-        setError('Não autorizado. O teu login pode ter expirado.');
+        setError('Not authorized. Your login may have expired.');
       } else {
-        setError('Erro ao publicar. Tenta novamente.');
+        setError('Erro publishing. Try again.');
       }
     } finally {
       setLoading(false);
@@ -119,13 +119,13 @@ const CreatePost = () => {
         <div className="create-container create-container-wide">
 
           <div className="create-header">
-            <h1 className="create-title">Nova publicação</h1>
+            <h1 className="create-title">New post</h1>
             <button
               className="create-preview-btn"
               onClick={() => { setPreview(v => !v); setSpoilerRevealed(false); }}
             >
               <FontAwesomeIcon icon={preview ? faEyeSlash : faEye} />
-              {preview ? 'Editar' : 'Pré-visualizar'}
+              {preview ? 'Edit' : 'Preview'}
             </button>
           </div>
 
@@ -144,21 +144,21 @@ const CreatePost = () => {
                   onClick={() => setIsTheory(v => !v)}
                 >
                   <FontAwesomeIcon icon={faWandMagicSparkles} />
-                  Teoria
+                  Theory
                 </button>
                 <button
                   className={`create-toggle-btn ${hasSpoiler ? 'active' : ''}`}
                   onClick={() => setHasSpoiler(v => !v)}
                 >
                   <FontAwesomeIcon icon={faTriangleExclamation} />
-                  Contém spoiler
+                  Contains spoiler
                 </button>
               </div>
 
               <div className="create-textarea-wrapper">
                 <textarea
                   className="create-textarea"
-                  placeholder="O que tens na cabeça?"
+                  placeholder="What do you have in mind?"
                   value={content}
                   onChange={e => e.target.value.length <= MAX_CHARS && setContent(e.target.value)}
                 />
@@ -182,7 +182,7 @@ const CreatePost = () => {
                   ))}
                   <input
                     className="create-tag-input"
-                    placeholder={tags.length === 0 ? 'Adicionar #tags...' : ''}
+                    placeholder={tags.length === 0 ? 'Add #tags...' : ''}
                     value={tagInput}
                     onChange={e => setTagInput(e.target.value)}
                     onKeyDown={handleTagKey}
@@ -203,7 +203,7 @@ const CreatePost = () => {
                   <button
                     className="create-icon-btn"
                     onClick={() => fileRef.current.click()}
-                    title="Anexar imagens"
+                    title="Attach images"
                     disabled={images.length >= 10}
                     style={{ opacity: images.length >= 10 ? 0.4 : 1 }}
                   >
@@ -218,7 +218,7 @@ const CreatePost = () => {
                 >
                   {loading
                     ? <FontAwesomeIcon icon={faSpinner} spin />
-                    : <><FontAwesomeIcon icon={faPaperPlane} /> Publicar</>
+                    : <><FontAwesomeIcon icon={faPaperPlane} /> Publish</>
                   }
                 </button>
               </div>
@@ -238,7 +238,7 @@ const CreatePost = () => {
                 {hasSpoiler ? (
                   <div style={{ position: 'relative' }}>
                     <div style={{ filter: spoilerRevealed ? 'none' : 'blur(8px)' }}>
-                      <p className="post-content">{content || 'Conteúdo do teu post vai aparecer aqui...'}</p>
+                      <p className="post-content">{content || 'The content of your post will appear here...'}</p>
                       <ImageGrid images={images} />
                     </div>
                     {!spoilerRevealed && (
@@ -247,14 +247,14 @@ const CreatePost = () => {
                         style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2 }}
                         onClick={() => setSpoilerRevealed(true)}
                       >
-                        Mostrar publicação
+                        Show content
                       </button>
                     )}
                   </div>
                 ) : (
                   <>
                     <p className="post-content">
-                      {content || <span style={{ color: '#bbb' }}>Conteúdo do teu post vai aparecer aqui...</span>}
+                      {content || <span style={{ color: '#bbb' }}>Your post's content will appear here...</span>}
                     </p>
                     <ImageGrid images={images} />
                   </>
@@ -269,10 +269,10 @@ const CreatePost = () => {
                 <div className="post-actions">
                   {isTheory && (
                     <span className="post-type-badge">
-                      <FontAwesomeIcon icon={faWandMagicSparkles} /> Teoria
+                      <FontAwesomeIcon icon={faWandMagicSparkles} /> Theory
                     </span>
                   )}
-                  {hasSpoiler && <span className="post-show">Contém spoiler</span>}
+                  {hasSpoiler && <span className="post-show">Contains spoiler</span>}
                   <div className="post-action-group">
                     <span><FontAwesomeIcon icon={faHeart} /> 0</span>
                     <span><FontAwesomeIcon icon={faComment} /> 0</span>
@@ -280,7 +280,7 @@ const CreatePost = () => {
                   </div>
                 </div>
               </div>
-              <p className="create-preview-note">Assim é como o teu post vai aparecer no feed.</p>
+              <p className="create-preview-note">This is how your post will appear on feed.</p>
             </div>
           )}
 

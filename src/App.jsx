@@ -19,12 +19,13 @@ import CreatePost from './pages/CreatePost';
 import CreateReview from './pages/CreateReview';
 import AuthorPage from './pages/AuthorPage';
 import BookPage from './pages/BookPage';
+import Settings from './pages/Settings'
 
 function BodyClassManager() {
   const location = useLocation();
 
   useEffect(() => {
-    const appRoutes = ['/feed', '/books', '/shelf', '/messages', '/profile', '/createpost', '/createreview', '/authorpage', '/bookpage'];
+    const appRoutes = ['/feed', '/books', '/shelf', '/messages', '/profile', '/createpost', '/createreview', '/authorpage', '/bookpage', '/settings'];
     const isAppRoute = appRoutes.some(route => location.pathname.startsWith(route));
 
     if (isAppRoute) {
@@ -48,93 +49,35 @@ function PageWrapper() {
 function App() {
   return (
     <ThemeProvider>
-    <BrowserRouter>
-      <BodyClassManager />
-      <Routes>
-        <Route element={<PageWrapper />}>
-          <Route path="/" element={<Root />} />
-          <Route path="/landing" element={<Landing />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route 
-            path="/feed" 
-            element={
-              <ProtectedRoute>
-                <Feed />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/books" 
-            element={
-              <ProtectedRoute>
-                <Books />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/authorpage" 
-            element={
-              <ProtectedRoute>
-                <AuthorPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/bookpage/:id" 
-            element={
-              <BookPage />
-            } 
-          />
-          <Route 
-            path="/shelf" 
-            element={
-              <ProtectedRoute>
-                <Shelf />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/messages" 
-            element={
-              <ProtectedRoute>
-                <Messages />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/createpost" 
-            element={
-              <ProtectedRoute>
-                <CreatePost />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/createreview" 
-            element={
-              <ProtectedRoute>
-                <CreateReview />
-              </ProtectedRoute>
-            }
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/confirm" element={<Confirm />} />
+      <BrowserRouter>
+        <BodyClassManager />
+        <Routes>
+          <Route element={<PageWrapper />}>
+            <Route path="/" element={<Root />} />
+            <Route path="/landing" element={<Landing />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/confirm" element={<Confirm />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/activate" element={<ActivateAccount />} />
+            <Route path="/bookpage/:id" element={<BookPage />} />
 
-          {/* Novas Rotas de Autenticação */}
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/activate" element={<ActivateAccount />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+            {/* Rotas protegidas */}
+            <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+            <Route path="/books" element={<ProtectedRoute><Books /></ProtectedRoute>} />
+            <Route path="/shelf" element={<ProtectedRoute><Shelf /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/messages/:conversationId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+            <Route path="/createpost" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+            <Route path="/createreview" element={<ProtectedRoute><CreateReview /></ProtectedRoute>} />
+            <Route path="/authorpage" element={<ProtectedRoute><AuthorPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile/:userId" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
     </ThemeProvider>
   );
 }

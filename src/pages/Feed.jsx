@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faHeart, faComment, faPaperPlane, faFrog, faWater,
   faWandMagicSparkles, faCirclePlus, faCheck, faBell,
-  faStar, faSpinner, faTriangleExclamation
+  faStar, faSpinner, faTriangleExclamation, faClover
 } from '@fortawesome/free-solid-svg-icons';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import api from '../services/api';
@@ -58,6 +58,10 @@ const Feed = () => {
   const [revealedSpoilers, setRevealedSpoilers] = useState(new Set());
   const revealSpoiler = (id) => setRevealedSpoilers(prev => new Set([...prev, id]));
 
+  const [recommendedUsers, setRecommendedUsers] = useState([]);
+  const [topTags, setTopTags] = useState([]);
+  const [followingIds, setFollowingIds] = useState(new Set());
+
   const refreshUser = async () => {
     try {
       const token = localStorage.getItem('@Lanuia:token') || localStorage.getItem('token');
@@ -90,7 +94,6 @@ const Feed = () => {
     }
   }, []);
 
-  // Carrega quando muda de tab
   useEffect(() => {
     setItems([]);
     setNextCursor(null);
@@ -122,6 +125,16 @@ const Feed = () => {
     if (stored) setUser(JSON.parse(stored));
     else navigate('/');
   }, [navigate]);
+
+  useEffect(() => {
+    api.get('/users/recommendations?limit=5')
+      .then(res => setRecommendedUsers(res.data))
+      .catch(err => console.error('recommendations error', err));
+
+    api.get('/tags/top?limit=5')
+      .then(res => setTopTags(res.data))
+      .catch(err => console.error('top tags error', err));
+  }, []);
 
   if (!user) return <p>Loading...</p>;
 
@@ -162,17 +175,26 @@ const Feed = () => {
 
         {tags.length > 0 && (
           <div className="post-tags">
-            {tags.map(tag => <span key={tag.id} className="post-tag">#{tag.name}</span>)}
+            {tags.map(tag => (
+              <span
+                key={tag.id}
+                className="post-tag"
+                style={{ cursor: 'pointer' }}
+                onClick={() => goToTag(tag.name)}
+              >
+                #{tag.name}
+              </span>
+            ))}
           </div>
         )}
 
         <div className="post-actions">
           {post.isTheory && (
             <span className="post-type-badge">
-              <FontAwesomeIcon icon={faWandMagicSparkles} /> Teoria
+              <FontAwesomeIcon icon={faWandMagicSparkles} /> Theory
             </span>
           )}
-          {post.hasSpoiler && <span className="post-show"><FontAwesomeIcon icon={faTriangleExclamation} /> Contém spoiler</span>}
+          {post.hasSpoiler && <span className="post-show"><FontAwesomeIcon icon={faTriangleExclamation} /> Contains spoiler</span>}
           <div className="post-action-group">
             <span><FontAwesomeIcon icon={faHeart} /> {post._count?.loves ?? post.loveCount ?? 0}</span>
             <span><FontAwesomeIcon icon={faComment} /> {post._count?.comments ?? 0}</span>
@@ -215,12 +237,12 @@ const Feed = () => {
         )}
 
         <span className={`recommend-badge ${review.recommend ? 'yes' : 'no'}`}>
-          {review.recommend ? '✓ Recomendo' : '✗ Não recomendo'}
+          {review.recommend ? '✓ Reccomended' : '✗ Not reccomended'}
         </span>
 
         <div className="post-actions">
           <span className="post-name">@{review.user?.nick}</span>
-          {review.hasSpoiler && <span className="post-show"><FontAwesomeIcon icon={faTriangleExclamation} /> Contém spoiler</span>}
+          {review.hasSpoiler && <span className="post-show"><FontAwesomeIcon icon={faTriangleExclamation} /> Contains spoiler</span>}
           <div className="post-action-group">
             <span><FontAwesomeIcon icon={faHeart} /> {review._count?.loves ?? review.loveCount ?? 0}</span>
             <span><FontAwesomeIcon icon={faPaperPlane} /></span>
@@ -228,6 +250,19 @@ const Feed = () => {
         </div>
       </div>
     );
+  };
+
+  const handleFollow = async (targetId) => {
+    try {
+      await api.post(`/users/${targetId}/follow`);
+      setFollowingIds(prev => new Set([...prev, targetId]));
+    } catch (err) {
+      console.error('follow error', err);
+    }
+  };
+
+  const goToTag = (tagName) => {
+    navigate(`/books?tag=${encodeURIComponent(tagName)}`);
   };
 
   return (
@@ -239,12 +274,12 @@ const Feed = () => {
 
           {activatedMessage && (
             <div className="success-box" style={{ marginTop: 20 }}>
-              <FontAwesomeIcon icon={faCheck} /> Conta ativada! Bem-vinda à Lanuia.
+              <FontAwesomeIcon icon={faCheck} /> Account activated! You may proceed now.
             </div>
           )}
           {!user.isActive && (
             <div className="warning-banner" style={{ borderRadius: 12, marginTop: 20 }}>
-              <span><FontAwesomeIcon icon={faBell} /> Confirma o teu email para ativares a conta.</span>
+              <span><FontAwesomeIcon icon={faBell} /> Confirm your email to activate your account.</span>
             </div>
           )}
 
@@ -253,7 +288,7 @@ const Feed = () => {
               className={activeTab === 'publicacoes' ? 'active-tab' : ''}
               onClick={() => setActiveTab('publicacoes')}
             >
-              Publicações
+              Posts
             </button>
             <button
               className={activeTab === 'reviews' ? 'active-tab' : ''}
@@ -280,13 +315,13 @@ const Feed = () => {
                 style={{ width: '100%', marginTop: 8 }}
                 onClick={() => fetchFeed(activeTab, nextCursor, nextCursorType)}
               >
-                Carregar mais
+                Load more
               </button>
             )}
 
             {!loadingFeed && items.length === 0 && (
               <p style={{ textAlign: 'center', color: 'var(--search-color)', marginTop: 40 }}>
-                Ainda não há publicações. Sê a primeira! 🌸
+                No one here yet. Be the first! <FontAwesomeIcon icon={faClover} />
               </p>
             )}
           </div>
@@ -301,32 +336,48 @@ const Feed = () => {
         </div>
 
         <div className="tags-box">
-          <h3><FontAwesomeIcon icon={faWater} /> Top #tags da semana</h3>
-          <div className="tag-card"><p>#imagine</p><span>123.4K posts</span></div>
-          <div className="tag-card"><p>#atlascasacomigo</p><span>98.3K posts</span></div>
-          <div className="tag-card"><p>#rwrb</p><span>87.6K posts</span></div>
-          <div className="tag-card"><p>#pjo</p><span>76.5K posts</span></div>
-          <div className="tag-card"><p>#romantasy</p><span>65.2K posts</span></div>
+          <h3><FontAwesomeIcon icon={faWater} /> Top weekly #tags</h3>
+          {topTags.length === 0 && (
+            <p style={{ fontSize: 13, color: 'var(--search-color)' }}>No trending tags yet.</p>
+          )}
+          {topTags.map(tag => (
+            <div
+              className="tag-card"
+              key={tag.id}
+              style={{ cursor: 'pointer' }}
+              onClick={() => goToTag(tag.name)}
+            >
+              <p>#{tag.name}</p>
+              <span>{tag.postCount} posts</span>
+            </div>
+          ))}
         </div>
 
         <div className="suggestions-box">
-          <h3><FontAwesomeIcon icon={faFrog} /> Sugestões para ti</h3>
-          <div className="suggestion-card">
-            <div className="profile-avatar" style={{ width: 38, height: 38, fontSize: 15 }}>A</div>
-            <div className="suggestion-info">
-              <span className="suggestion-name">Apollo &gt;&gt;&gt;&gt;</span>
-              <span className="suggestion-nick">@apollofan</span>
+          <h3><FontAwesomeIcon icon={faFrog} /> Suggestions for you</h3>
+          {recommendedUsers.length === 0 && (
+            <p style={{ fontSize: 13, color: 'var(--search-color)' }}>No suggestions right now.</p>
+          )}
+          {recommendedUsers.map(u => (
+            <div className="suggestion-card" key={u.id}>
+              <div className="profile-avatar" style={{ width: 38, height: 38, fontSize: 15 }}>
+                {u.profilepic
+                  ? <img src={u.profilepic} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                  : (u.name?.[0] ?? '?')}
+              </div>
+              <div className="suggestion-info">
+                <span className="suggestion-name">{u.name}</span>
+                <span className="suggestion-nick">@{u.nick}</span>
+              </div>
+              <button
+                className="follow-btn"
+                onClick={() => handleFollow(u.id)}
+                disabled={followingIds.has(u.id)}
+              >
+                <FontAwesomeIcon icon={followingIds.has(u.id) ? faCheck : faCirclePlus} />
+              </button>
             </div>
-            <button className="follow-btn"><FontAwesomeIcon icon={faCirclePlus} /></button>
-          </div>
-          <div className="suggestion-card">
-            <div className="profile-avatar" style={{ width: 38, height: 38, fontSize: 15 }}>B</div>
-            <div className="suggestion-info">
-              <span className="suggestion-name">BookishSoul</span>
-              <span className="suggestion-nick">@bookishsoul</span>
-            </div>
-            <button className="follow-btn"><FontAwesomeIcon icon={faCirclePlus} /></button>
-          </div>
+          ))}
         </div>
       </aside>
     </div>

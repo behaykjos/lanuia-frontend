@@ -69,16 +69,15 @@ function MessageBubble({ msg, isMe, showAvatar, convColor, onReact }) {
   );
 }
 
-const ChatWindow = ({ conversation, messages: initialMessages }) => {
+const ChatWindow = ({ conversation, messages, onSend }) => {
   const [input, setInput] = useState('');
-  const [msgs, setMsgs] = useState(initialMessages || []);
   const [showStickerMenu, setShowStickerMenu] = useState(false);
   const bottomRef = useRef(null);
   const stickerRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [msgs]);
+  }, [messages]);
 
   // Fecha menu ao clicar fora
   useEffect(() => {
@@ -93,23 +92,18 @@ const ChatWindow = ({ conversation, messages: initialMessages }) => {
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    setMsgs(prev => [...prev, {
-      id: Date.now(),
-      from: 'me',
-      text: input.trim(),
-      time: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
-    }]);
+    onSend(input.trim());
     setInput('');
   };
 
   const handleReact = (msgId, emoji) => {
-    setMsgs(prev => prev.map(m => m.id === msgId ? { ...m, reaction: emoji } : m));
+    console.warn('Reações ainda não são guardadas na base de dados.');
   };
 
   // Só mostra o avatar se for a última mensagem de uma sequência do mesmo remetente.
   const isLastInSequence = (index) => {
-    const current = msgs[index];
-    const next = msgs[index + 1];
+    const current = messages[index];
+    const next = messages[index + 1];
     if (!next) return true;
     if (next.from === 'system') return true;
     return next.from !== current.from;
@@ -131,7 +125,7 @@ const ChatWindow = ({ conversation, messages: initialMessages }) => {
 
       {/* Mensagens */}
       <div className="dm-messages">
-        {msgs.map((msg, index) => {
+        {messages.map((msg, index) => {
           if (msg.from === 'system') {
             return <div key={msg.id} className="dm-date-divider">{msg.text}</div>;
           }

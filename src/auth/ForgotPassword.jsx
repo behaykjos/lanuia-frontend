@@ -16,15 +16,10 @@ const ForgotPassword = () => {
     try {
       const res = await api.post('/auth/forgot-password', { email });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to send reset email');
-      }
-
       setMessage('If an account exists for this email, you will receive a reset link shortly.');
     } catch (err) {
-      setError(err.message);
+      const errorMessage = err.response?.data?.error || 'Failed to send reset email';
+      setError(errorMessage);
     }
   };
 

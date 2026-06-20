@@ -72,7 +72,7 @@ const CreateReview = () => {
         const results = await searchBooks(bookQuery);
         setSuggestions(results || []);
       } catch (err) {
-        console.error("Erro ao procurar livros na Google Books API:", err);
+        console.error("Error while searching books on Google Books API:", err);
         setSuggestions([]);
       }
     }, 500);
@@ -103,13 +103,13 @@ const CreateReview = () => {
         <div className="create-container create-container-wide">
 
           <div className="create-header">
-            <h1 className="create-title">Nova review</h1>
+            <h1 className="create-title">New review</h1>
             <button
               className="create-preview-btn"
               onClick={() => { setPreview(v => !v); setSpoilerRevealed(false); }}
             >
               <FontAwesomeIcon icon={preview ? faEyeSlash : faEye} />
-              {preview ? 'Editar' : 'Pré-visualizar'}
+              {preview ? 'Edit' : 'Preview'}
             </button>
           </div>
 
@@ -117,10 +117,10 @@ const CreateReview = () => {
             <div className="create-form">
 
               <div className="review-field">
-                <label className="field-label">Título da review</label>
+                <label className="field-label">Review Title</label>
                 <input
                   className="review-input"
-                  placeholder="Ex: Melhor obra da minha VIDA"
+                  placeholder="Ex: The BEST book of my LIFE"
                   value={reviewName}
                   onChange={e => setReviewName(e.target.value)}
                 />
@@ -132,7 +132,7 @@ const CreateReview = () => {
                   <FontAwesomeIcon icon={faMagnifyingGlass} style={{ color: 'var(--search-color)', flexShrink: 0 }} />
                   <input
                     className="review-book-search-input"
-                    placeholder="Pesquisar livro..."
+                    placeholder="Searching livro..."
                     value={bookQuery}
                     onChange={(e) => setBookQuery(e.target.value)}
                   />
@@ -197,11 +197,11 @@ const CreateReview = () => {
 
               <div className="review-field" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 24, alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <label className="field-label">Classificação</label>
+                  <label className="field-label">Classification</label>
                   <StarRating value={stars} onChange={setStars} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
-                  <label className="field-label">Recomendo?</label>
+                  <label className="field-label">Reccomend?</label>
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button
                       className={`create-toggle-btn ${recommend === true ? 'active' : ''}`}
@@ -218,7 +218,7 @@ const CreateReview = () => {
               <div className="create-textarea-wrapper">
                 <textarea
                   className="create-textarea"
-                  placeholder="Como é o desenvolvimento do personagem protagonista? O plot é bom? Te identificaste com a história? Partilha pormenores da tua leitura para incentivares outros bookstans a lerem o livro."
+                  placeholder="How is the development of the protagonist? Is the plot nice? Did you identify with the story? Share details about your reading to encourage bookstans to read the book."
                   value={content}
                   onChange={e => e.target.value.length <= MAX_CHARS && setContent(e.target.value)}
                 />
@@ -240,7 +240,7 @@ const CreateReview = () => {
               <div className="create-footer" style={{ paddingTop: image ? 12 : 0 }}>
                 <div className="create-footer-left">
                   {!image && (
-                    <button className="create-icon-btn" onClick={() => fileRef.current.click()} title="Anexar imagem">
+                    <button className="create-icon-btn" onClick={() => fileRef.current.click()} title="Attach images">
                       <FontAwesomeIcon icon={faImage} />
                     </button>
                   )}
@@ -250,7 +250,7 @@ const CreateReview = () => {
                     style={{ whiteSpace: 'nowrap' }}
                   >
                     <FontAwesomeIcon icon={faTriangleExclamation} />
-                    Contém spoiler
+                    Contains spoiler
                   </button>
                 </div>
                 <button
@@ -259,7 +259,7 @@ const CreateReview = () => {
                   onClick={() => alert('Post enviado!')}
                 >
                   <FontAwesomeIcon icon={faPaperPlane} />
-                  Publicar
+                  Publish
                 </button>
               </div>
 
@@ -270,8 +270,8 @@ const CreateReview = () => {
                 <div className="post-header">
                   <div className="profile-avatar">{storedUser?.name?.[0] || 'T'}</div>
                   <div className="post-info">
-                    <p className="review-name">{reviewName || 'Título da review'}</p>
-                    <p className="review-book-title">{bookQuery || 'Nome do livro'}</p>
+                    <p className="review-name">{reviewName || 'Review name'}</p>
+                    <p className="review-book-title">{bookQuery || 'Book name'}</p>
                   </div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     {[1,2,3,4,5].map(i => (
@@ -284,16 +284,16 @@ const CreateReview = () => {
                 {hasSpoiler && !image ? (
                   <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                     <p className="post-content" style={{ filter: spoilerRevealed ? 'none' : 'blur(8px)', margin: 0, display: 'inline-block' }}>
-                      {content || 'Conteúdo da review vai aparecer aqui...'}
+                      {content || 'The content of your review will appear here...'}
                     </p>
                     {!spoilerRevealed && (
                       <button className="post-show-btn" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2 }} onClick={() => setSpoilerRevealed(true)}>
-                        Mostrar review
+                        Show content
                       </button>
                     )}
                   </div>
                 ) : (
-                  <p className="post-content">{content || <span style={{ color: '#bbb' }}>Conteúdo da review vai aparecer aqui...</span>}</p>
+                  <p className="post-content">{content || <span style={{ color: '#bbb' }}>Your review's content will appear here...</span>}</p>
                 )}
 
                 {image && (
@@ -308,7 +308,7 @@ const CreateReview = () => {
 
                 <div className="post-actions">
                   <span className="post-name">{storedUser?.name || 'Tu'}</span>
-                  {hasSpoiler && <span className="post-show">Contém spoiler</span>}
+                  {hasSpoiler && <span className="post-show">Contains spoiler</span>}
                   <div className="post-action-group">
                     <span><FontAwesomeIcon icon={faHeart} /> 0</span>
                     <span><FontAwesomeIcon icon={faComment} /> 0</span>
@@ -316,7 +316,7 @@ const CreateReview = () => {
                   </div>
                 </div>
               </div>
-              <p className="create-preview-note">Assim é como a tua review vai aparecer no feed.</p>
+              <p className="create-preview-note">This is how your review will appear on feed.</p>
             </div>
           )}
 

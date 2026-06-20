@@ -36,7 +36,7 @@ const BookPage = () => {
     <div className="layout">
       <Sidebar />
       <main className="book-main" style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#aaa' }}>A carregar...</p>
+        <p style={{ color: '#aaa' }}>Loading...</p>
       </main>
     </div>
   );
@@ -139,7 +139,7 @@ const BookPage = () => {
                       {index < info.authors.length - 1 && ', '}
                     </span>
                   ))
-                ) : 'Autor desconhecido'}
+                ) : 'Unknown author'}
               </p>
             </div>
 
@@ -149,7 +149,7 @@ const BookPage = () => {
                 onClick={() => setSavedToShelf(v => !v)}
               >
                 <FontAwesomeIcon icon={faBookmark} />
-                {savedToShelf ? 'Na estante' : 'Adicionar à estante'}
+                {savedToShelf ? 'On your shelf' : 'Add to shelf'}
               </button>
               <button className="author-more-btn">
                 <FontAwesomeIcon icon={faShareNodes} />
@@ -180,32 +180,32 @@ const BookPage = () => {
             </div>
             <div className="book-rating-total">
               <span>{info.ratingsCount ? `${(info.ratingsCount / 1000).toFixed(1)}K` : '—'}</span>
-              <span style={{ fontSize: 12, color: '#aaa' }}>Avaliações totais</span>
+              <span style={{ fontSize: 12, color: '#aaa' }}>Total reviews</span>
             </div>
           </div>
 
           {/* Sinopse */}
           <div className="book-synopsis">
-            <h3 className="book-section-title">Sinopse</h3>
+            <h3 className="book-section-title">Synopsis</h3>
             {info.description ? (
               <p
                 className="book-synopsis-text"
                 dangerouslySetInnerHTML={{ __html: info.description }}
               />
             ) : (
-              <p className="book-synopsis-text" style={{ color: '#aaa' }}>Sinopse não disponível.</p>
+              <p className="book-synopsis-text" style={{ color: '#aaa' }}>Synopsis unavailable.</p>
             )}
           </div>
 
           {/* Posts da comunidade */}
           <div className="book-community">
-            <h3 className="book-section-title">Reviews da comunidade</h3>
+            <h3 className="book-section-title">Community reviews</h3>
 
             <div className="post-card">
               <div className="post-header">
                 <div className="profile-avatar">M</div>
                 <div className="post-info">
-                  <p className="review-name">Melhor livro da minha vida</p>
+                  <p className="review-name">Best book of my LIFE!</p>
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {[1,2,3,4,5].map(i => <FontAwesomeIcon key={i} icon={faStar} style={{ color: '#E8AFC2', fontSize: 13 }} />)}
@@ -213,7 +213,7 @@ const BookPage = () => {
                 <span className="post-more">···</span>
               </div>
               <p className="post-content">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-              <span className="recommend-badge yes">✓ Recomendo</span>
+              <span className="recommend-badge yes">✓ Recommend</span>
               <div className="post-actions">
                 <span className="post-name">Nakyum</span>
                 <div className="post-action-group">
@@ -240,13 +240,13 @@ const BookPage = () => {
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 </p>
                 <button className="post-show-btn" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 2 }}>
-                  Mostrar publicação
+                  Show content
                 </button>
               </div>
-              <span className="recommend-badge no" style={{ marginTop: '17px' }}>✗ Não recomendo</span>
+              <span className="recommend-badge no" style={{ marginTop: '17px' }}>✗ Not recommend</span>
               <div className="post-actions">
                 <span className="post-name">He/She/It</span>
-                <span className="post-show">Contém spoiler</span>
+                <span className="post-show">Contains spoiler</span>
                 <div className="post-action-group">
                   <span><FontAwesomeIcon icon={faHeart} /> 98</span>
                   <span><FontAwesomeIcon icon={faComment} /> 12</span>

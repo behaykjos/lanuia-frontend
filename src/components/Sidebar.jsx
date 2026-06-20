@@ -16,10 +16,10 @@ const Sidebar = () => {
   }, []);
 
   const menuItems = [
-    { icon: Home, label: "Página inicial", path: "/feed" },
-    { icon: BookOpen, label: "Livros", path: "/books" },
-    { icon: Library, label: "Estante", path: "/shelf" },
-    { icon: MessageCircle, label: "Mensagens diretas", path: "/messages" },
+    { icon: Home, label: "Home page", path: "/feed" },
+    { icon: BookOpen, label: "Books", path: "/books" },
+    { icon: Library, label: "Shelf", path: "/shelf" },
+    { icon: MessageCircle, label: "Direct messages", path: "/messages" },
   ];
 
   useEffect(() => {
@@ -33,6 +33,9 @@ const Sidebar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Extrai a primeira letra do nome do utilizador ou usa 'U' como fallback
+  const avatarLetter = user?.name?.[0]?.toUpperCase() || "U";
+
   return (
     <aside className="sidebar-container">
       {/* Logo */}
@@ -44,7 +47,6 @@ const Sidebar = () => {
       <nav className="menu-section">
         {menuItems.map((item, index) => {
           const Icon = item.icon;
-
           return (
             <NavLink
               key={index}
@@ -71,20 +73,14 @@ const Sidebar = () => {
               <button
                 type="button"
                 className="create-menu-option"
-                onClick={() => {
-                  setShowCreateMenu(false);
-                  navigate('/createpost');
-                }}
+                onClick={() => { setShowCreateMenu(false); navigate('/createpost'); }}
               >
                 Post
               </button>
               <button
                 type="button"
                 className="create-menu-option"
-                onClick={() => {
-                  setShowCreateMenu(false);
-                  navigate('/createreview');
-                }}
+                onClick={() => { setShowCreateMenu(false); navigate('/createreview'); }}
               >
                 Review
               </button>
@@ -94,10 +90,22 @@ const Sidebar = () => {
       </nav>
 
       {/* Perfil */}
-      <div className="profile-section" onClick={e => e.stopPropagation()}>
+      <div
+        className="profile-section"
+        onClick={() => navigate('/profile')}
+        style={{ cursor: 'pointer' }}
+      >
         <div className="profile-info">
-          <div className="profile-avatar" style={{ flexShrink: 0 }}>
-            {user?.name?.[0] || "U"}
+          <div className="profile-avatar" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {user?.profilepic ? (
+              <img 
+                src={user.profilepic} 
+                alt="" 
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
+              />
+            ) : (
+              avatarLetter
+            )}
           </div>
           <div className="profile-details">
             <span className="profile-name">{user?.name || "Utilizador"}</span>
@@ -106,7 +114,7 @@ const Sidebar = () => {
         </div>
         <button
           className="theme-toggle-btn"
-          onClick={toggleTheme}
+          onClick={e => { e.stopPropagation(); toggleTheme(); }}
           title={`Trocar para tema ${theme === 'green' ? 'rosa' : 'verde'}`}
         >
           <Palette size={18} />

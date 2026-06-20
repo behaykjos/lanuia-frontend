@@ -1,112 +1,102 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
-import { searchBooks } from '../services/googleBooks';
+import { searchBooks, getBooksByAuthor, filterSafeBooks } from '../services/googleBooks';
 import { searchAuthorsByName, getAuthorImage, getAuthorDetails } from '../services/openLibrary';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faPenNib, faCirclePlus, faSeedling } from '@fortawesome/free-solid-svg-icons';
 
-const TOP_CATEGORIES = [
-  { id: 'romance',   label: 'Romance',           query: 'subject:romance bestseller' },
-  { id: 'fantasy',   label: 'Fantasia',           query: 'subject:fantasy magic' },
-  { id: 'thriller',  label: 'Thriller & Mistério', query: 'subject:thriller mystery' },
-  { id: 'ya',        label: 'Young Adult',         query: 'subject:young adult fiction' },
-  { id: 'classics',  label: 'Clássicos',           query: 'subject:classics literature' },
-];
-
 const ALL_CATEGORIES = [
   { id: 'romance', label: 'Romance', query: 'subject:romance bestseller' },
-  { id: 'fantasy', label: 'Fantasia', query: 'subject:fantasy magic' },
+  { id: 'fantasy', label: 'Fantasy', query: 'subject:fantasy magic' },
   { id: 'romantasy', label: 'Romantasy', query: 'fantasy romance fae magic' },
   { id: 'dark', label: 'Dark Romance', query: 'dark romance enemies lovers' },
   { id: 'ya', label: 'Young Adult', query: 'subject:young adult fiction' },
   { id: 'thriller', label: 'Thriller', query: 'subject:thriller suspense' },
-  { id: 'mystery', label: 'Mistério', query: 'subject:mystery detective' },
-  { id: 'classics', label: 'Clássicos', query: 'subject:classics literature' },
-  { id: 'scifi', label: 'Ficção Científica', query: 'subject:science fiction' },
+  { id: 'mystery', label: 'Mistery', query: 'subject:mystery detective' },
+  { id: 'classics', label: 'Classics', query: 'subject:classics literature' },
+  { id: 'scifi', label: 'Science Fiction', query: 'subject:science fiction' },
   { id: 'horror', label: 'Horror', query: 'subject:horror scary' },
-  { id: 'historical', label: 'Romance Histórico', query: 'historical romance regency' },
-  { id: 'contemporary', label: 'Contemporâneo', query: 'contemporary romance adult' },
+  { id: 'historical', label: 'Historical Romance', query: 'historical romance regency' },
+  { id: 'contemporary', label: 'Contemporary', query: 'contemporary romance adult' },
   { id: 'newadult', label: 'New Adult', query: 'new adult romance college' },
   { id: 'paranormal', label: 'Paranormal', query: 'paranormal romance vampire' },
   { id: 'manga', label: 'Manga & Webtoon', query: 'manga romance shojo' },
-  { id: 'poetry', label: 'Poesia', query: 'subject:poetry love' },
-  { id: 'selfhelp', label: 'Autoajuda', query: 'subject:self-help personal development' },
-  { id: 'biography', label: 'Biografia', query: 'subject:biography memoir' },
+  { id: 'poetry', label: 'Poetry', query: 'subject:poetry love' },
+  { id: 'selfhelp', label: 'Selfhelp', query: 'subject:self-help personal development' },
+  { id: 'biography', label: 'Biography', query: 'subject:biography memoir' },
   { id: 'crime', label: 'Crime & Policial', query: 'subject:crime fiction murder' },
-  { id: 'lgbtq', label: 'LGBTQ+', query: 'lgbtq romance queer fiction' },
-  { id: 'booktok', label: 'BookTok Favoritos', query: 'colleen hoover taylor jenkins reid' },
+  { id: 'lgbtq', label: 'LGBTQIAPN+', query: 'lgbtq romance queer fiction' },
+  { id: 'booktok', label: 'BookTok Favorites', query: 'colleen hoover taylor jenkins reid' },
   { id: 'enemies', label: 'Enemies to Lovers', query: 'enemies to lovers romance' },
   { id: 'slowburn', label: 'Slow Burn', query: 'slow burn romance tension' },
   { id: 'spicy', label: 'Spicy Romance', query: 'spicy romance adult fiction' },
   { id: 'fae', label: 'Fae & Magia', query: 'fae magic court fantasy' },
   { id: 'dystopia', label: 'Distopia', query: 'subject:dystopian fiction' },
-  { id: 'adventure', label: 'Aventura', query: 'subject:adventure action' },
+  { id: 'adventure', label: 'Adventure', query: 'subject:adventure action' },
   { id: 'graphic', label: 'Graphic Novels', query: 'subject:graphic novels comics' },
-  { id: 'portuguese', label: 'Autores Portugueses', query: 'autores portugueses ficção' },
-  { id: 'brazilian', label: 'Literatura Brasileira', query: 'literatura brasileira romance' },
 ];
 
 const CATALOG_SECTIONS = [
   {
     id: 'booktok',
-    label: '🔥 Favoritos do BookTok',
+    label: 'BookTok Favorites',
     query: 'BookTok romance fiction',
   },
   {
     id: 'nyt',
-    label: '📰 New York Times Bestsellers',
+    label: 'New York Times Bestsellers',
     query: '"New York Times bestselling" romance fiction',
   },
   {
     id: 'adapted',
-    label: '🎬 Adaptados para Cinema & Série',
+    label: 'Adapted to the Screen',
     query: 'subject:fiction adapted film bestseller romance',
   },
   {
     id: 'manga',
-    label: '🌸 Mangá & Webtoon',
+    label: 'Manga & Webtoon',
     query: 'subject:manga shojo romance',
   },
   {
     id: 'lovetriangle',
-    label: '💔 Triângulos Amorosos',
+    label: 'Love Triangle',
     query: 'love triangle romance young adult',
   },
   {
     id: 'darkromance',
-    label: '🖤 Dark Romance',
+    label: 'Dark Romance',
     query: 'dark romance',
   },
   {
     id: 'enemiestolovers',
-    label: '⚔️ Enemies to Lovers',
+    label: 'Enemies to Lovers',
     query: 'enemies to lovers romance',
   },
   {
     id: 'fae',
-    label: '🧚 Fae & Magia',
+    label: 'Fae & Magia',
     query: 'fae magic court fantasy romance',
   },
   {
     id: 'slowburn',
-    label: '🕯️ Slow Burn',
+    label: 'Slow Burn',
     query: 'slow burn romance tension',
   },
   {
     id: 'horror',
-    label: '👻 Horror & Suspense',
+    label: 'Horror & Suspense',
     query: 'subject:horror supernatural thriller',
   },
   {
     id: 'children',
-    label: '🌈 Leitura Infantil',
+    label: 'Ideal for Kids',
     query: 'subject:juvenile fiction adventure animals',
   },
   {
     id: 'recent',
-    label: '🆕 Lançamentos Recentes',
-    query: 'fiction romance 2025',
+    label: 'Recently published',
+    query: 'fiction romance 2026',
   },
 ];
 
@@ -153,17 +143,8 @@ const buildBookCardData = (item) => {
 const EXPLICIT_TITLE_WORDS = [
   'seduced', 'naked', 'bare', 'naughty', 'filthy', 'dirty', 'sinful',
   'lust', 'erotic', 'erotica', 'seduction', 'forbidden desire', 'adults',
-  'wet', 'hard', 'stroking', 'climax', 'orgasm', 'arousal',
+  'wet', 'hard', 'stroking', 'climax', 'orgasm', 'arousal', 'xxx', 'porn', 'nude',
 ];
-
-// Remove livros com título explícito ou classificados como mature pela API
-const filterSafeBooks = (books) => {
-  return books.filter((book) => {
-    if (book.maturityRating === 'MATURE') return false;
-    const titleLower = (book.title || '').toLowerCase();
-    return !EXPLICIT_TITLE_WORDS.some((word) => titleLower.includes(word));
-  });
-};
 
 // Extrai as primeiras DUAS frases de uma bio
 const getFirstTwoSentences = (bioText) => {
@@ -274,12 +255,14 @@ const Books = () => {
   const featuredAuthorLoadedRef = useRef(false);
 
   const [personalizedBooks, setPersonalizedBooks] = useState([]);
+  const [visibleBooks, setVisibleBooks] = useState(20);
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [catalogSections, setCatalogSections] = useState({});
   const [categoryCounts, setCategoryCounts] = useState({});
   const [suggestedAuthors, setSuggestedAuthors] = useState([]);
   const [visibleAuthors, setVisibleAuthors] = useState(12);
   const [worksCount, setWorksCount] = useState(null);
+  const [topCategories, setTopCategories] = useState([]);
 
   const [searchParams] = useSearchParams();
 
@@ -325,8 +308,6 @@ const Books = () => {
       dystopia: 'subject:dystopian fiction',
       adventure: 'subject:adventure action',
       graphic: 'subject:graphic novels comics',
-      portuguese: 'autores portugueses ficção',
-      brazilian: 'literatura brasileira romance',
     };
     const favoriteCategory = user.favoriteCategory || 'romance';
     const favoriteAuthor = user.favoriteAuthor || '';
@@ -350,7 +331,7 @@ const Books = () => {
         if (author?.key) {
           const image = getAuthorImage(author.key.replace('/authors/', ''));
           const details = await getAuthorDetails(author.key);
-          const bio = details?.bio ? getFirstTwoSentences(details.bio) : 'Autora sugerida com base nas preferências da comunidade.';
+          const bio = details?.bio ? getFirstTwoSentences(details.bio) : 'Author suggested based on community preferences';
 
           setFeaturedAuthor({
             name: author.name,
@@ -389,7 +370,7 @@ const Books = () => {
   useEffect(() => {
     const loadCatalogs = async () => {
       const results = {};
-      const BATCH_SIZE = 3;
+      const BATCH_SIZE = 2;
 
       for (let i = 0; i < CATALOG_SECTIONS.length; i += BATCH_SIZE) {
         const batch = CATALOG_SECTIONS.slice(i, i + BATCH_SIZE);
@@ -419,24 +400,6 @@ const Books = () => {
       }
     };
     loadCatalogs();
-  }, []);
-
-  // Contagem de livros para as top 5 categorias
-  useEffect(() => {
-    const loadCounts = async () => {
-      const counts = {};
-      for (const cat of TOP_CATEGORIES) {
-        try {
-          const books = await searchBooks(cat.query);
-          // Google Books não dá total exato, usa totalItems do primeiro resultado
-          counts[cat.id] = books?.length || 0;
-        } catch {
-          counts[cat.id] = 0;
-        }
-      }
-      setCategoryCounts(counts);
-    };
-    loadCounts();
   }, []);
 
   // Autores sugeridos (rotativos)
@@ -478,7 +441,8 @@ const Books = () => {
         setQuery(tag);
         setActiveTag(tag);
         const books = await searchBooks(`subject:${tag}`);
-        setBookResults((books || []).map(buildBookCardData).slice(0, 20));
+        setBookResults((books || []).map(buildBookCardData));
+        setVisibleBooks(20);
         setIsSearching(true);
         setActiveTab('books');
       } catch {
@@ -490,6 +454,32 @@ const Books = () => {
     };
     doTagSearch();
   }, [searchParams]);
+
+  useEffect(() => {
+    setTopCategories(getRotatingTopCategories());
+  }, []);
+
+  const getRotatingTopCategories = () => {
+    const key = '@Lanuia:topCategoriesIndex';
+    const tsKey = '@Lanuia:topCategoriesTs';
+    const INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 horas
+
+    const now = Date.now();
+    const lastTs = parseInt(localStorage.getItem(tsKey) || '0', 10);
+    let startIndex = parseInt(localStorage.getItem(key) || '0', 10);
+
+    if (now - lastTs > INTERVAL_MS) {
+      startIndex = (startIndex + 5) % ALL_CATEGORIES.length;
+      localStorage.setItem(key, String(startIndex));
+      localStorage.setItem(tsKey, String(now));
+    }
+
+    const result = [];
+    for (let i = 0; i < 5; i++) {
+      result.push(ALL_CATEGORIES[(startIndex + i) % ALL_CATEGORIES.length]);
+    }
+    return result;
+  };
 
   const renderSection = (title, books, sectionKey) => {
     if (!books || books.length === 0) return null;
@@ -536,7 +526,8 @@ const Books = () => {
         searchAuthorsByName(term),
       ]);
 
-      setBookResults((books || []).map(buildBookCardData).slice(0, 15));
+      setBookResults((books || []).map(buildBookCardData));
+      setVisibleBooks(20);
       setAllAuthorResults(authors || []);
       setAuthorResults((authors || []).slice(0, 12));
       setVisibleAuthors(12);
@@ -545,7 +536,7 @@ const Books = () => {
 
       // NÃO atualiza o featuredAuthor aqui — fica com o banner original
     } catch (err) {
-      setError('Não foi possível pesquisar neste momento.');
+      setError('It was not possible to search at the time.');
       setBookResults(FALLBACK_BOOKS);
       setIsSearching(true);
     } finally {
@@ -568,7 +559,7 @@ const Books = () => {
         {!isSearching && featuredAuthor && (
           <div className="author-banner">
             <div className="author-banner-info">
-              <span className="author-banner-label">Autores Sugeridos</span>
+              <span className="author-banner-label">Suggested Authors</span>
               <h2 className="author-banner-name">{featuredAuthor.name}</h2>
               <p className="author-banner-bio">{featuredAuthor.bio}</p>
               <div className="author-banner-actions">
@@ -621,10 +612,10 @@ const Books = () => {
         {isSearching && (
           <div className="feed-tabs">
             <button className={activeTab === 'books' ? 'active-tab' : ''} onClick={() => setActiveTab('books')}>
-              Livros
+              Books
             </button>
             <button className={activeTab === 'authors' ? 'active-tab' : ''} onClick={() => setActiveTab('authors')}>
-              Autores
+              Authors
             </button>
           </div>
         )}
@@ -633,17 +624,28 @@ const Books = () => {
           {isSearching ? (
             <>
               {activeTab === 'books' && (
-                <div className="search-results-grid">
-                  {bookResults.map((book) => (
-                    <BookCard key={book.id} book={book} onAuthorClick={handleAuthorNavigate} />
-                  ))}
+                <div>
+                  <div className="search-results-grid">
+                    {bookResults.slice(0, visibleBooks).map((book) => (
+                      <BookCard key={book.id} book={book} onAuthorClick={handleAuthorNavigate} />
+                    ))}
+                  </div>
+                  {visibleBooks < bookResults.length && (
+                    <span
+                      className="btn-secondary"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setVisibleBooks((prev) => Math.min(prev + 20, bookResults.length))}
+                    >
+                      Load more
+                    </span>
+                  )}
                 </div>
               )}
 
               {activeTab === 'authors' && (
                 <div>
                   <p style={{ color: '#888', fontSize: 13, marginBottom: 12 }}>
-                    Exibindo {Math.min(visibleAuthors, allAuthorResults.length)} de {allAuthorResults.length} autores
+                    Exibindo {Math.min(visibleAuthors, allAuthorResults.length)} de {allAuthorResults.length} authors
                   </p>
                   <div className="search-results-grid">
                     {allAuthorResults.slice(0, visibleAuthors).map((author) => {
@@ -686,7 +688,7 @@ const Books = () => {
                       style={{ cursor: 'pointer' }}
                       onClick={() => setVisibleAuthors((prev) => Math.min(prev + 12, allAuthorResults.length))}
                     >
-                      Carregar mais
+                      Load more
                     </span>
                   )}
                   <p>&nbsp;</p>
@@ -695,8 +697,8 @@ const Books = () => {
             </>
           ) : (
             <>
-              {recentlyViewed.length > 0 && renderSection('🕐 Recentemente Visitados', recentlyViewed, 'recently-viewed')}
-              {renderSection('✨ Recomendados para ti', personalizedBooks, 'personalized')}
+              {recentlyViewed.length > 0 && renderSection('Recently Viewed', recentlyViewed, 'recently-viewed')}
+              {renderSection('Recommended for you', personalizedBooks, 'personalized')}
               {CATALOG_SECTIONS.map((section) =>
                 renderSection(section.label, catalogSections[section.id], section.id)
               )}
@@ -709,7 +711,7 @@ const Books = () => {
         <div className="search-container" style={{ marginTop: 20 }}>
           <FontAwesomeIcon icon={faMagnifyingGlass} />
           <input
-            placeholder="O que procuras?"
+            placeholder="Searching for something?"
             value={query}
             onChange={(e) => {
               const value = e.target.value;
@@ -728,8 +730,8 @@ const Books = () => {
 
         {/* Top 5 categorias com contagem */}
         <div className="tags-box">
-          <h3><FontAwesomeIcon icon={faSeedling} /> Categorias</h3>
-          {TOP_CATEGORIES.map((cat) => (
+          <h3><FontAwesomeIcon icon={faSeedling} /> Categories</h3>
+          {topCategories.map((cat) => (
             <div
               key={cat.id}
               className="tag-card"
@@ -740,7 +742,8 @@ const Books = () => {
                 setLoading(true);
                 searchBooks(cat.query)
                   .then((books) => {
-                    setBookResults((books || []).map(buildBookCardData).slice(0, 20));
+                    setBookResults((books || []).map(buildBookCardData));
+                    setVisibleBooks(20);
                     setIsSearching(true);
                     setActiveTab('books');
                   })
@@ -752,18 +755,13 @@ const Books = () => {
               }}
             >
               <p style={{ margin: 0, flex: 1, textAlign: 'left' }}>{cat.label}</p>
-              {categoryCounts[cat.id] != null && (
-                <span style={{ fontSize: 11, color: 'var(--text-tertiary)', flexShrink: 0 }}>
-                  {categoryCounts[cat.id]}+
-                </span>
-              )}
             </div>
           ))}
         </div>
 
         {/* Autores sugeridos */}
         <div className="suggestions-box">
-          <h3><FontAwesomeIcon icon={faPenNib} /> Autores para ti</h3>
+          <h3><FontAwesomeIcon icon={faPenNib} /> Authors for you</h3>
           {suggestedAuthors.map((author) => (
             <div
               key={author.key}
@@ -781,7 +779,7 @@ const Books = () => {
               <div className="suggestion-info">
                 <span className="suggestion-name">{author.name}</span>
                 <span className="suggestion-total">
-                  {author.work_count != null ? `${author.work_count} livros publicados` : 'Autor'}
+                  {author.work_count != null ? `${author.work_count} books published` : 'Author'}
                 </span>
               </div>
               <button className="follow-btn" onClick={(e) => e.stopPropagation()}>

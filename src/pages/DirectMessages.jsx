@@ -1,79 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import ChatWindow from '../components/ChatWindow';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faCircleInfo, faPaperPlane, faImage, faFaceSmile } from '@fortawesome/free-solid-svg-icons';
- 
-const CONVERSATIONS = [
-  {
-    id: 1,
-    name: 'Ana Carolina',
-    nick: '@anacarolina',
-    avatarColor: '#d4a0b5',
-    lastMessage: 'Sent a review!',
-    time: '2h',
-    unread: true,
-  },
-  {
-    id: 2,
-    name: 'Valew Nataliina',
-    nick: '@valew',
-    avatarColor: '#c8a4b8',
-    lastMessage: 'Apaga pelo amor de Deus eu...',
-    time: '7h',
-    unread: false,
-  },
-  {
-    id: 3,
-    name: 'ch_riss',
-    nick: '@chriss',
-    avatarColor: '#b8869e',
-    lastMessage: '♥ ♥ ♥',
-    time: '2d',
-    unread: false,
-  },
-  {
-    id: 4,
-    name: 'fxx_akira',
-    nick: '@fxxakira',
-    avatarColor: '#9d6b7a',
-    lastMessage: 'Calado sua passiva',
-    time: '2d',
-    unread: false,
-  },
-  {
-    id: 5,
-    name: '546mlm',
-    nick: '@546mlm',
-    avatarColor: '#c49ab8',
-    lastMessage: 'Sent a post!',
-    time: '3d',
-    unread: false,
-  },
-  {
-    id: 6,
-    name: 'Lauren ama Rhea',
-    nick: '@maridadarhea',
-    avatarColor: '#E8AFC2',
-    lastMessage: 'Reacted: ♥',
-    time: '2w',
-    unread: false,
-  },
-];
- 
-const MESSAGES = {
-  6: [
-    { id: 1, from: 'them', text: 'Eu acho que ela podia ter entregado mais no livro sabe', time: '14:02' },
-    { id: 2, from: 'them', text: 'Esperava porradarlaaa', time: '14:03' },
-    { id: 3, from: 'them', text: 'Kkkkkk', time: '14:04' },
-    { id: 4, from: 'system', text: 'Thursday, May 23' },
-    { id: 5, from: 'me', text: 'Ah, sim né', time: '09:11' },
-    { id: 6, from: 'me', text: 'O romance do nada grita mais alto, não acho que era o que a gente esperava com toda aquela trilogia né', time: '09:12' },
-    { id: 7, from: 'them', text: 'Mas também, um Cardan daqueles...', time: '09:15' },
-    { id: 8, from: 'me', text: '♥ ♥ ♥ ♥ ♥', time: '09:16', isReaction: true },
-  ],
-};
- 
-function Avatar({ name, color, size = 40 }) {
+import { faMagnifyingGlass, faCirclePlus } from '@fortawesome/free-solid-svg-icons';
+import api from '../services/api';
+
+function Avatar({ name, color, size = 40, src }) {
+  if (src) {
+    return <img src={src} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />;
+  }
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
@@ -86,8 +21,8 @@ function Avatar({ name, color, size = 40 }) {
     </div>
   );
 }
- 
-const EmptyState = ({ onStartChat }) => (
+
+const EmptyState = () => (
   <div className="dm-empty">
     <img
       src="https://images.joseartgallery.com/64453/conversions/flower-painting-lake-lotus-water-lily-pond-thumb900.jpg"
@@ -98,173 +33,200 @@ const EmptyState = ({ onStartChat }) => (
     <p className="dm-empty-subtitle">
       Each chat is a sparkling water lily. Why don't you try jumping on them?
     </p>
-    <button className="dm-start-btn" onClick={onStartChat}>
-      Start new chat
-    </button>
   </div>
 );
- 
-const ChatWindow = ({ conversation, messages, onBack }) => {
-  const [input, setInput] = useState('');
-  const [msgs, setMsgs] = useState(messages || []);
-  const bottomRef = useRef(null);
- 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [msgs]);
- 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMsgs(prev => [...prev, {
-      id: Date.now(),
-      from: 'me',
-      text: input.trim(),
-      time: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
-    }]);
-    setInput('');
-  };
- 
-  return (
-    <div className="dm-chat">
-      {/* Header */}
-      <div className="dm-chat-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div>
-            <span className="dm-chat-name">{conversation.name}</span>
-            &nbsp;
-            <span className="dm-chat-nick"> {conversation.nick}</span>
-          </div>
-        </div>
-        <FontAwesomeIcon icon={faCircleInfo} style={{ color: '#aaa', fontSize: 18, cursor: 'pointer' }} />
-      </div>
- 
-      {/* Mensagens */}
-      <div className="dm-messages">
-        {msgs.map((msg, index) => {
-          if (msg.from === 'system') {
-            return (
-              <div key={msg.id} className="dm-date-divider">{msg.text}</div>
-            );
-          }
 
-          const isMe = msg.from === 'me';
-
-          // Verifica se é a última mensagem da sequência
-          const nextMsg = msgs[index + 1];
-          // Salta mensagens de sistema para verificar quem vem a seguir
-          const getNextRealMsg = (index) => {
-            for (let i = index + 1; i < msgs.length; i++) {
-              if (msgs[i].from !== 'system') return msgs[i];
-            }
-            return null; // ← fora do for
-          };
-
-          const nextReal = getNextRealMsg(index);
-          const isLast = !nextReal || nextReal.from !== msg.from;
-
-          return (
-            <div key={msg.id} className={`dm-msg-row ${isMe ? 'dm-msg-me' : 'dm-msg-them'}`}>
-              {/* Espaço reservado à esquerda (outra pessoa) */}
-              {!isMe && (
-                <div style={{ width: 32, flexShrink: 0 }}>
-                  {isLast && <Avatar name={conversation.name} color={conversation.avatarColor} size={32} />}
-                </div>
-              )}
-
-              <div className={`dm-bubble ${msg.isReaction ? 'dm-bubble-reaction' : ''} ${isMe ? 'dm-bubble-me' : 'dm-bubble-them'}`}>
-                {msg.text}
-              </div>
-
-              {/* Espaço reservado à direita (eu) */}
-              {isMe && (
-                <div style={{ width: 32, flexShrink: 0 }}>
-                  {isLast && <Avatar name="Eu" color="#c8a4b8" size={32} />}
-                </div>
-              )}
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
-      </div>
- 
-      {/* Input */}
-      <div className="dm-input-bar">
-        <input
-          className="dm-input"
-          placeholder="Message"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && sendMessage()}
-        />
-        <div className="dm-input-actions">
-          <FontAwesomeIcon icon={faImage} style={{ color: '#bbb', cursor: 'pointer' }} />
-          <button className="dm-send-btn" onClick={sendMessage}>
-            <FontAwesomeIcon icon={faPaperPlane} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
- 
 const DirectMessages = () => {
-  const [activeConv, setActiveConv] = useState(null);
+  const [chats, setChats] = useState([]);
+  const [following, setFollowing] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [search, setSearch] = useState('');
- 
-  const filtered = CONVERSATIONS.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase())
+  const [loading, setLoading] = useState(true);
+
+  const me = JSON.parse(localStorage.getItem('@Lanuia:user') || '{}');
+
+  const loadAll = async () => {
+    try {
+      const [chatsRes, followingRes] = await Promise.all([
+        api.get('/chats'),
+        api.get('/users/following'),
+      ]);
+      setChats(chatsRes.data);
+      setFollowing(followingRes.data);
+    } catch (err) {
+      console.error('Error while loading chats or users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadAll(); }, []);
+
+  const loadMessages = async (chatId) => {
+    try {
+      const res = await api.get(`/chats/${chatId}/messages`);
+      setMessages(res.data);
+    } catch (err) {
+      console.error('Error while loading messages:', err);
+      setMessages([]);
+    }
+  };
+
+  // Abre um chat já existente (vindo da lista CONVERSATIONS normal)
+  const openExistingChat = async (chat) => {
+    setActiveChat({ id: chat.id, otherUser: chat.otherUser });
+    await loadMessages(chat.id);
+    setChats(prev => prev.map(c => c.id === chat.id ? { ...c, unreadCount: 0 } : c));
+  };
+
+  // Abre (ou cria, se ainda não existir) um chat a partir de um utilizador seguido
+  const openChatWithUser = async (user) => {
+    const existingChat = chats.find(c => c.otherUser?.id === user.id);
+    if (existingChat) {
+      return openExistingChat(existingChat);
+    }
+
+    try {
+      const res = await api.post('/chats', { targetUserId: user.id });
+      const newChat = { id: res.data.id, otherUser: user, lastMessage: null, unreadCount: 0 };
+      setChats(prev => [newChat, ...prev]);
+      setActiveChat({ id: newChat.id, otherUser: user });
+      setMessages([]);
+    } catch (err) {
+      console.error('Error while starting chat:', err);
+    }
+  };
+
+  const handleSend = async (content) => {
+    try {
+      const res = await api.post(`/chats/${activeChat.id}/messages`, { content });
+      setMessages(prev => [...prev, res.data]);
+      setChats(prev => prev.map(c =>
+        c.id === activeChat.id
+          ? { ...c, lastMessage: { content, sentAt: res.data.sentAt, fromMe: true } }
+          : c
+      ));
+    } catch (err) {
+      console.error('Error while sending message:', err);
+    }
+  };
+
+  const formattedMessages = messages.map(m => ({
+    id: m.id,
+    from: m.userId === me.id ? 'me' : 'them',
+    text: m.content,
+    senderName: m.user?.name,
+    time: new Date(m.sentAt).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
+  }));
+
+  // Junta cada utilizador seguido com o respetivo chat (se existir), para mostrar a última mensagem
+  const followingWithChats = following.map(user => {
+    const chat = chats.find(c => c.otherUser?.id === user.id);
+    return { user, chat };
+  });
+
+  const isSearching = search.trim().length > 0;
+  const filteredFollowing = followingWithChats.filter(({ user }) =>
+    user.name?.toLowerCase().includes(search.toLowerCase()) ||
+    user.nick?.toLowerCase().includes(search.toLowerCase())
   );
- 
+
   return (
     <div className="layout">
       <Sidebar />
- 
-      {/* Centro */}
+
       <main className="feed" style={{ padding: 0 }}>
-        {activeConv
+        {activeChat
           ? <ChatWindow
-              conversation={activeConv}
-              messages={MESSAGES[activeConv.id] || []}
-              onBack={() => setActiveConv(null)}
+              conversation={{
+                name: activeChat.otherUser?.name,
+                nick: `@${activeChat.otherUser?.nick}`,
+                avatarColor: 'var(--accent-soft)',
+              }}
+              messages={formattedMessages}
+              onSend={handleSend}
             />
-          : <EmptyState onStartChat={() => setActiveConv(CONVERSATIONS[0])} />
+          : <EmptyState />
         }
       </main>
- 
-      {/* Lista de conversas */}
+
       <aside className="right-column" style={{ width: 280 }}>
         <div className="search-container" style={{ marginTop: 20 }}>
-          <FontAwesomeIcon icon={faMagnifyingGlass} style={{ color: '#9d6b7a' }} />
+          <FontAwesomeIcon icon={faMagnifyingGlass} />
           <input
-            placeholder="Pesquisar amigos & chats"
+            placeholder="Search friends & chats"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
- 
-        <div className="dm-conv-list">
-          {filtered.map(conv => (
-            <div
-              key={conv.id}
-              className={`dm-conv-item ${activeConv?.id === conv.id ? 'dm-conv-active' : ''}`}
-              onClick={() => setActiveConv(conv)}
-            >
-              <Avatar name={conv.name} color={conv.avatarColor} size={42} />
-              <div className="dm-conv-info">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="dm-conv-name">{conv.name}</span>
-                  <span className="dm-conv-time">{conv.time}</span>
+
+        {/* Pesquisa ativa: mostra utilizadores que sigo, em formato de card */}
+        {isSearching ? (
+          <div className="suggestions-box">
+            {filteredFollowing.length === 0 && (
+              <p style={{ padding: '8px 4px', color: '#999', fontSize: 13 }}>
+                No user found.
+              </p>
+            )}
+            {filteredFollowing.map(({ user, chat }) => (
+              <div
+                key={user.id}
+                className="suggestion-card"
+                style={{ cursor: 'pointer' }}
+                onClick={() => openChatWithUser(user)}
+              >
+                <Avatar name={user.name} src={user.profilepic} size={38} />
+                <div className="suggestion-info">
+                  <span className="suggestion-name">{user.name}</span>
+                  <span className="suggestion-nick">@{user.nick}</span>
                 </div>
-                <span className={`dm-conv-last ${conv.unread ? 'dm-conv-unread' : ''}`}>
-                  {conv.lastMessage}
+                <span style={{ fontSize: 11, color: '#999', maxWidth: 80, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {chat?.lastMessage
+                    ? `${chat.lastMessage.fromMe ? 'Você: ' : ''}${chat.lastMessage.content}`
+                    : ''}
                 </span>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          // Sem pesquisa: lista normal de conversas existentes
+          <div className="dm-conv-list">
+            {loading && <p style={{ padding: 12, color: '#999', fontSize: 13 }}>A carregar...</p>}
+
+            {!loading && chats.length === 0 && (
+              <p style={{ padding: 12, color: '#999', fontSize: 13 }}>No conversation yet... ribbit.</p>
+            )}
+
+            {chats.map(chat => (
+              <div
+                key={chat.id}
+                className={`dm-conv-item ${activeChat?.id === chat.id ? 'dm-conv-active' : ''}`}
+                onClick={() => openExistingChat(chat)}
+              >
+                <Avatar name={chat.otherUser?.name} src={chat.otherUser?.profilepic} size={42} />
+                <div className="dm-conv-info">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className="dm-conv-name">{chat.otherUser?.name}</span>
+                    {chat.lastMessage && (
+                      <span className="dm-conv-time">
+                        {new Date(chat.lastMessage.sentAt).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`dm-conv-last ${chat.unreadCount > 0 ? 'dm-conv-unread' : ''}`}>
+                    {chat.lastMessage
+                      ? `${chat.lastMessage.fromMe ? 'Você: ' : ''}${chat.lastMessage.content}`
+                      : 'No messages yet.'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </aside>
     </div>
   );
 };
- 
+
 export default DirectMessages;

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import api from '../services/api';  // 1. mudou de { api } para import default
+import api from '../services/api'; 
 
 const Confirm = () => {
   const location = useLocation();

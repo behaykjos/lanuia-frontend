@@ -16,13 +16,11 @@ const Login = () => {
     setError('');
 
     try {
+      // 1. Faz a requisição usando o Axios
       const res = await api.post('/auth/login', { identifier, password });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
+      // 2. No Axios, os dados já vêm prontos em res.data (não precisa de res.json())
+      const data = res.data; 
 
       // Salvar dados no localStorage
       localStorage.setItem('@Lanuia:token', data.token);
@@ -31,7 +29,10 @@ const Login = () => {
       // Redireciona para o Feed
       navigate("/feed");
     } catch (err) {
-      setError(err.message);
+      // 3. O Axios joga erros de status (como 400 ou 401) direto para o catch.
+      // Pegamos a mensagem que veio do seu servidor backend se ela existir.
+      const mensagemErro = err.response?.data?.error || 'Login failed';
+      setError(mensagemErro);
     }
   };
 
